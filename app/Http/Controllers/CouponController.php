@@ -8,6 +8,8 @@ use App\Http\Requests\UpdateCouponRequest;
 use App\Http\Requests\ValidateCouponRequest;
 use App\Services\CouponService;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+
 
 /**
  * CouponController

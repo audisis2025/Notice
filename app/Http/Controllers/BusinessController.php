@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateBusinessRequest;
 use App\Http\Requests\SuspendBusinessRequest;
 use App\Services\BusinessService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * BusinessController
@@ -83,7 +84,7 @@ class BusinessController extends Controller
     public function store(StoreBusinessRequest $request)
     {
         try {
-            $user = auth()->user();
+            $user = Auth::user();
             $this->businessService->registerBusiness($user, $request->validated());
 
             return redirect()->route('dashboard')

@@ -8,6 +8,9 @@ use App\Http\Requests\UpdateOrderRequest;
 use App\Services\OrderService;
 use App\Services\OrderReminderService;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
+
 
 /**
  * OrderController
@@ -55,7 +58,7 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $business = auth()->user()->business;
+        $business = Auth::user()->business;
         $query = $business->orders()->with('user');
 
         // Filtros
@@ -83,7 +86,7 @@ class OrderController extends Controller
      */
     public function create()
     {
-        $business = auth()->user()->business;
+        $business = Auth::user()->business;
 
         return view('orders.create', compact('business'));
     }
@@ -97,7 +100,7 @@ class OrderController extends Controller
     public function store(StoreOrderRequest $request)
     {
         try {
-            $business = auth()->user()->business;
+            $business = Auth::user()->business;
             $order = $this->orderService->createOrder($business, $request->validated());
 
             return redirect()->route('orders.show', $order)

@@ -7,6 +7,7 @@ use App\Http\Requests\StorePackageRequest;
 use App\Http\Requests\UpdatePackageRequest;
 use App\Services\PackageService;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 
 /**
  * PackageController

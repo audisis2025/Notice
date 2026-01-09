@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Services\ReportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Routing\Controller;
 
 /**
  * ReportController
@@ -39,7 +41,7 @@ class ReportController extends Controller
      */
     public function index()
     {
-        $business = auth()->user()->business;
+        $business = Auth::user()->business;
 
         return view('reports.index', compact('business'));
     }
@@ -58,7 +60,7 @@ class ReportController extends Controller
         ]);
 
         try {
-            $business = auth()->user()->business;
+            $business = Auth::user()->business;
             $report = $this->reportService->generateOrdersReport(
                 $business,
                 $request->start_date,
@@ -85,7 +87,7 @@ class ReportController extends Controller
         ]);
 
         try {
-            $business = auth()->user()->business;
+            $business = Auth::user()->business;
             $report = $this->reportService->generateOrdersReport(
                 $business,
                 $request->start_date,

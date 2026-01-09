@@ -7,6 +7,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Services\UserService;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 
 /**
  * UserController

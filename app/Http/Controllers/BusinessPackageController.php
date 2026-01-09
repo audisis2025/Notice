@@ -6,6 +6,7 @@ use App\Models\Package;
 use App\Http\Requests\ContractPackageRequest;
 use App\Services\BusinessPackageService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * BusinessPackageController
@@ -42,7 +43,7 @@ class BusinessPackageController extends Controller
     public function index()
     {
         $packages = Package::active()->orderBy('price')->get();
-        $business = auth()->user()->business;
+        $business = Auth::user()->business;
 
         return view('business-packages.index', compact('packages', 'business'));
     }
@@ -55,7 +56,7 @@ class BusinessPackageController extends Controller
      */
     public function show(Package $package)
     {
-        $business = auth()->user()->business;
+        $business = Auth::user()->business;
 
         if (!$business) {
             return redirect()->route('business.create')
@@ -74,7 +75,7 @@ class BusinessPackageController extends Controller
     public function contract(ContractPackageRequest $request)
     {
         try {
-            $business = auth()->user()->business;
+            $business = Auth::user()->business;
             $package = Package::findOrFail($request->package_id);
 
             $this->businessPackageService->contractPackage(
@@ -99,7 +100,7 @@ class BusinessPackageController extends Controller
      */
     public function history()
     {
-        $business = auth()->user()->business;
+        $business = Auth::user()->business;
         $businessPackages = $business->businessPackages()
             ->with('package')
             ->latest()

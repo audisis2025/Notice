@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\ReportService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * DashboardController
@@ -38,7 +39,8 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $user = auth()->user();
+        /** @var User $user */
+        $user = Auth::user();
 
         if ($user->isSuperAdministrator()) {
             return $this->superAdminDashboard();
@@ -70,7 +72,7 @@ class DashboardController extends Controller
      */
     protected function businessAdminDashboard()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $business = $user->business;
 
         if (!$business) {

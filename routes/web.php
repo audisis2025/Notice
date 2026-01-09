@@ -10,6 +10,8 @@ use App\Http\Controllers\CouponController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ReportController;
+use Illuminate\Support\Facades\Auth;
+use App\Livewire\Chat\ChatComponent;
 
 /**
  * ============================================================================
