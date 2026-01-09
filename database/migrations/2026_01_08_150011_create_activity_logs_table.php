@@ -1,5 +1,20 @@
 <?php
-
+/**
+ * Nombre de la clase           : CreateActivityLogsTable
+ * Descripción de la clase      : Migración que crea la tabla activity_logs para registrar
+ *                                la actividad de los usuarios en el sistema
+ * Fecha de creación            : 09/01/2026
+ * Elaboró                      : Jesús Núñez
+ * Fecha de liberación          : 09/01/2026
+ * Autorizó                     : Jesús Núñez
+ * Versión                      : 1.0
+ * Fecha de mantenimiento       : 
+ * Folio de mantenimiento       : 
+ * Tipo de mantenimiento        :
+ * Descripción del mantenimiento: 
+ * Responsable                  : 
+ * Revisor                      : 
+ */
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

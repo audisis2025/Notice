@@ -1,5 +1,20 @@
 <?php
-
+/**
+ * Nombre de la clase           : CreateCouponsTable
+ * Descripción de la clase      : Migración que crea la tabla coupons para almacenar
+ *                                cupones de descuento del sistema
+ * Fecha de creación            : 09/01/2026
+ * Elaboró                      : Jesús Núñez
+ * Fecha de liberación          : 09/01/2026
+ * Autorizó                     : Jesús Núñez
+ * Versión                      : 1.0
+ * Fecha de mantenimiento       : 
+ * Folio de mantenimiento       : 
+ * Tipo de mantenimiento        :
+ * Descripción del mantenimiento: 
+ * Responsable                  : 
+ * Revisor                      : 
+ */
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

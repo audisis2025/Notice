@@ -1,3 +1,20 @@
+/**
+ * Nombre del archivo           : sweetalert-config.js
+ * Descripción del archivo      : Archivo que configura SweetAlert2 y define
+ *                                funciones helper para alertas
+ * Fecha de creación            : 09/01/2026
+ * Elaboró                      : Jesús Núñez
+ * Fecha de liberación          : 09/01/2026
+ * Autorizó                     : Jesús Núñez
+ * Versión                      : 1.0
+ * Fecha de mantenimiento       : 
+ * Folio de mantenimiento       : 
+ * Tipo de mantenimiento        :
+ * Descripción del mantenimiento: 
+ * Responsable                  : 
+ * Revisor                      : 
+ */
+import Swal from 'sweetalert2'; 
 // Configuración global de SweetAlert2
 window.Swal = Swal.mixin({
     customClass: {

@@ -1,3 +1,21 @@
+{{-- 
+/**
+ * Nombre de la vista           : guest.blade.php
+ * Descripción de la vista      : Layout para usuarios no autenticados usado
+ *                                en login y registro
+ * Fecha de creación            : 09/01/2026
+ * Elaboró                      : Jesús Núñez
+ * Fecha de liberación          : 09/01/2026
+ * Autorizó                     : Jesús Núñez
+ * Versión                      : 1.0
+ * Fecha de mantenimiento       : 
+ * Folio de mantenimiento       : 
+ * Tipo de mantenimiento        :
+ * Descripción del mantenimiento: 
+ * Responsable                  : 
+ * Revisor                      : 
+ */
+--}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>

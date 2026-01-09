@@ -1,9 +1,27 @@
+{{-- 
+/**
+ * Nombre de la vista           : welcome.blade.php
+ * Descripción de la vista      : Página de bienvenida del sistema que muestra
+ *                                las características y enlaces de acceso
+ * Fecha de creación            : 09/01/2026
+ * Elaboró                      : Jesús Núñez
+ * Fecha de liberación          : 09/01/2026
+ * Autorizó                     : Jesús Núñez
+ * Versión                      : 1.0
+ * Fecha de mantenimiento       : 
+ * Folio de mantenimiento       : 
+ * Tipo de mantenimiento        :
+ * Descripción del mantenimiento: 
+ * Responsable                  : 
+ * Revisor                      : 
+ */
+--}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SISNOTICE - Sistema de Notificaciones</title>
+    <title>SISNOTICE</title>
     @vite(['resources/css/app.css'])
 </head>
 <body class="antialiased">

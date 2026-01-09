@@ -1,3 +1,21 @@
+{{-- 
+/**
+ * Nombre de la vista           : navigation.blade.php
+ * Descripción de la vista      : Barra de navegación del sistema que varía
+ *                                según el rol del usuario
+ * Fecha de creación            : 09/01/2026
+ * Elaboró                      : Jesús Núñez
+ * Fecha de liberación          : 09/01/2026
+ * Autorizó                     : Jesús Núñez
+ * Versión                      : 1.0
+ * Fecha de mantenimiento       : 
+ * Folio de mantenimiento       : 
+ * Tipo de mantenimiento        :
+ * Descripción del mantenimiento: 
+ * Responsable                  : 
+ * Revisor                      : 
+ */
+--}}
 <aside class="w-64 bg-white shadow-lg flex flex-col">
     <!-- Logo -->
     <div class="p-6 border-b">
