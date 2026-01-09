@@ -1,29 +1,95 @@
 <div>
     {{-- Encabezado --}}
     <div class="mb-6 flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-            <x-heroicon-o-shopping-bag class="w-8 h-8 mr-2" />
-            Gestión de Órdenes
-        </h2>
+        <div class="flex items-center">
+            <x-heroicon-o-shopping-bag class="w-8 h-8 text-gray-700 mr-3" />
+            <h2 class="text-3xl font-bold text-gray-900">Gestión de Órdenes</h2>
+        </div>
         
         <flux:button 
             variant="primary" 
-            icon="plus"
             href="{{ route('orders.create') }}"
             class="bg-black hover:bg-[#494949]"
         >
+            <x-heroicon-o-plus class="w-5 h-5 mr-2" />
             Nueva Orden
         </flux:button>
     </div>
 
+    {{-- Estadísticas rápidas --}}
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase">Todas</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $orders->total() }}</p>
+                </div>
+                <x-heroicon-o-shopping-bag class="w-8 h-8 text-gray-400" />
+            </div>
+        </div>
+
+        <div class="bg-yellow-50 rounded-lg shadow p-4 cursor-pointer" wire:click="$set('statusFilter', 'pending')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-yellow-700 uppercase">Pendientes</p>
+                    <p class="text-2xl font-bold text-yellow-900">
+                        {{ auth()->user()->business->orders()->where('status', 'pending')->count() }}
+                    </p>
+                </div>
+                <x-heroicon-o-clock class="w-8 h-8 text-yellow-500" />
+            </div>
+        </div>
+
+        <div class="bg-blue-50 rounded-lg shadow p-4 cursor-pointer" wire:click="$set('statusFilter', 'paid')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-blue-700 uppercase">Pagadas</p>
+                    <p class="text-2xl font-bold text-blue-900">
+                        {{ auth()->user()->business->orders()->where('status', 'paid')->count() }}
+                    </p>
+                </div>
+                <x-heroicon-o-credit-card class="w-8 h-8 text-blue-500" />
+            </div>
+        </div>
+
+        <div class="bg-orange-50 rounded-lg shadow p-4 cursor-pointer" wire:click="$set('statusFilter', 'ready')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-orange-700 uppercase">Listas</p>
+                    <p class="text-2xl font-bold text-orange-900">
+                        {{ auth()->user()->business->orders()->where('status', 'ready')->count() }}
+                    </p>
+                </div>
+                <x-heroicon-o-check-circle class="w-8 h-8 text-orange-500" />
+            </div>
+        </div>
+
+        <div class="bg-green-50 rounded-lg shadow p-4 cursor-pointer" wire:click="$set('statusFilter', 'delivered')">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-green-700 uppercase">Entregadas</p>
+                    <p class="text-2xl font-bold text-green-900">
+                        {{ auth()->user()->business->orders()->where('status', 'delivered')->count() }}
+                    </p>
+                </div>
+                <x-heroicon-o-check-badge class="w-8 h-8 text-green-500" />
+            </div>
+        </div>
+    </div>
+
     {{-- Filtros --}}
     <div class="bg-white rounded-lg shadow p-6 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <flux:input 
-                wire:model.live.debounce.300ms="search"
-                placeholder="Buscar por número de orden..."
-                icon="magnifying-glass"
-            />
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2">
+                <flux:input 
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Buscar por número de orden..."
+                >
+                    <x-slot:iconTrailing>
+                        <x-heroicon-o-magnifying-glass class="w-5 h-5" />
+                    </x-slot:iconTrailing>
+                </flux:input>
+            </div>
 
             <flux:select wire:model.live="statusFilter">
                 <option value="">Todos los estados</option>
@@ -52,50 +118,50 @@
             </flux:thead>
             <flux:tbody>
                 @forelse($orders as $order)
-                    <flux:tr wire:key="order-{{ $order->id }}">
-                        <flux:td class="font-mono text-sm">
-                            {{ $order->order_number }}
+                    <flux:tr wire:key="order-{{ $order->id }}" class="hover:bg-gray-50">
+                        <flux:td>
+                            <span class="font-mono text-sm font-semibold text-gray-900">
+                                {{ $order->order_number }}
+                            </span>
                         </flux:td>
                         <flux:td>
                             @if($order->user)
                                 <div class="flex items-center">
-                                    <x-heroicon-o-user class="w-4 h-4 text-gray-400 mr-1" />
-                                    {{ $order->user->name }}
+                                    <div class="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                        <x-heroicon-o-user class="w-5 h-5 text-gray-500" />
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">{{ $order->user->name }}</p>
+                                        <p class="text-xs text-gray-500">{{ $order->user->phone }}</p>
+                                    </div>
                                 </div>
                             @else
-                                <span class="text-gray-400 text-sm">Sin asociar</span>
+                                <div class="flex items-center text-gray-400">
+                                    <x-heroicon-o-user-circle class="w-5 h-5 mr-2" />
+                                    <span class="text-sm">Sin asociar</span>
+                                </div>
                             @endif
                         </flux:td>
                         <flux:td>
-                            <div class="max-w-xs truncate">
-                                {{ $order->description }}
+                            <div class="max-w-xs">
+                                <p class="text-sm text-gray-900 truncate">{{ $order->description }}</p>
                             </div>
                         </flux:td>
-                        <flux:td class="font-semibold">
-                            ${{ number_format($order->amount, 2) }}
+                        <flux:td>
+                            <span class="text-lg font-bold text-gray-900">
+                                ${{ number_format($order->amount, 2) }}
+                            </span>
                         </flux:td>
                         <flux:td>
-                            @php
-                                $statusConfig = [
-                                    'pending' => ['variant' => 'gray', 'icon' => 'clock', 'text' => 'Pendiente'],
-                                    'paid' => ['variant' => 'info', 'icon' => 'credit-card', 'text' => 'Pagada'],
-                                    'ready' => ['variant' => 'warning', 'icon' => 'check-circle', 'text' => 'Lista'],
-                                    'delivered' => ['variant' => 'success', 'icon' => 'check-badge', 'text' => 'Entregada'],
-                                    'cancelled' => ['variant' => 'danger', 'icon' => 'x-circle', 'text' => 'Cancelada'],
-                                ];
-                                $config = $statusConfig[$order->status] ?? $statusConfig['pending'];
-                            @endphp
-                            
-                            <flux:badge variant="{{ $config['variant'] }}">
-                                @php
-                                    $iconComponent = "heroicon-o-{$config['icon']}";
-                                @endphp
-                                <x-dynamic-component :component="$iconComponent" class="w-4 h-4 mr-1" />
-                                {{ $config['text'] }}
-                            </flux:badge>
+                            <x-badge-status :status="$order->status" />
                         </flux:td>
-                        <flux:td class="text-sm text-gray-600">
-                            {{ $order->created_at->format('d/m/Y H:i') }}
+                        <flux:td>
+                            <div class="text-sm text-gray-600">
+                                {{ $order->created_at->format('d/m/Y') }}
+                            </div>
+                            <div class="text-xs text-gray-400">
+                                {{ $order->created_at->format('H:i') }}
+                            </div>
                         </flux:td>
                         <flux:td>
                             <div class="flex justify-center space-x-1">
@@ -179,9 +245,14 @@
                     </flux:tr>
                 @empty
                     <flux:tr>
-                        <flux:td colspan="7" class="text-center text-gray-500 py-8">
-                            <x-heroicon-o-shopping-bag class="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                            <p>No se encontraron órdenes</p>
+                        <flux:td colspan="7">
+                            <x-empty-state
+                                icon="shopping-bag"
+                                title="No se encontraron órdenes"
+                                description="No hay órdenes que coincidan con los filtros seleccionados"
+                                actionText="Crear Primera Orden"
+                                actionUrl="{{ route('orders.create') }}"
+                            />
                         </flux:td>
                     </flux:tr>
                 @endforelse
@@ -197,16 +268,19 @@
     @if($showQRModal && $selectedOrder)
         <flux:modal wire:model="showQRModal">
             <div class="text-center p-6">
-                <h3 class="text-xl font-semibold mb-4 flex items-center justify-center">
-                    <x-heroicon-o-qr-code class="w-6 h-6 mr-2" />
+                <div class="mb-4 inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full">
+                    <x-heroicon-o-qr-code class="w-10 h-10 text-gray-600" />
+                </div>
+
+                <h3 class="text-xl font-semibold mb-2">
                     Código QR - {{ $qrType === 'association' ? 'Asociación' : 'Entrega' }}
                 </h3>
                 
-                <p class="text-gray-600 mb-4">
-                    Orden: <span class="font-mono font-bold">{{ $selectedOrder->order_number }}</span>
+                <p class="text-gray-600 mb-6">
+                    Orden: <span class="font-mono font-bold text-black">{{ $selectedOrder->order_number }}</span>
                 </p>
 
-                <div class="bg-white p-4 rounded-lg inline-block">
+                <div class="bg-white p-6 rounded-lg border-2 border-gray-200 inline-block">
                     @php
                         $qrPath = $qrType === 'delivery' ? $selectedOrder->qr_delivery_code : $selectedOrder->qr_code;
                     @endphp
@@ -217,23 +291,24 @@
                     >
                 </div>
 
-                <div class="mt-6 space-y-2">
-                    <p class="text-sm text-gray-600">
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-blue-800 flex items-center justify-center">
                         @if($qrType === 'association')
-                            <x-heroicon-o-information-circle class="w-5 h-5 inline mr-1" />
+                            <x-heroicon-o-information-circle class="w-5 h-5 mr-2" />
                             El cliente debe escanear este QR para asociar la orden a su cuenta
                         @else
-                            <x-heroicon-o-shield-check class="w-5 h-5 inline mr-1" />
+                            <x-heroicon-o-shield-check class="w-5 h-5 mr-2" />
                             El cliente debe escanear este QR para confirmar la entrega
                         @endif
                     </p>
                 </div>
 
-                <div class="mt-6 flex justify-center space-x-2">
+                <div class="mt-6 flex justify-center space-x-3">
                     <flux:button 
                         variant="ghost"
                         wire:click="closeQRModal"
                     >
+                        <x-heroicon-o-x-mark class="w-5 h-5 mr-2" />
                         Cerrar
                     </flux:button>
 
@@ -242,8 +317,8 @@
                         href="{{ route('orders.download-qr', [$selectedOrder, $qrType]) }}"
                         class="bg-black hover:bg-[#494949]"
                     >
-                        <x-heroicon-o-arrow-down-tray class="w-5 h-5 mr-1" />
-                        Descargar
+                        <x-heroicon-o-arrow-down-tray class="w-5 h-5 mr-2" />
+                        Descargar QR
                     </flux:button>
                 </div>
             </div>
@@ -259,19 +334,23 @@
                 inputLabel: 'Motivo de cancelación',
                 inputPlaceholder: 'Escribe el motivo...',
                 inputAttributes: {
-                    'aria-label': 'Motivo de cancelación'
+                    'aria-label': 'Motivo de cancelación',
+                    'rows': 4
                 },
                 showCancelButton: true,
                 confirmButtonText: 'Sí, cancelar orden',
                 cancelButtonText: 'No cancelar',
                 customClass: {
-                    confirmButton: 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition',
-                    cancelButton: 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition ml-2'
+                    confirmButton: 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium',
+                    cancelButton: 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium ml-2'
                 },
                 buttonsStyling: false,
                 inputValidator: (value) => {
                     if (!value) {
                         return 'Debes escribir un motivo'
+                    }
+                    if (value.length < 10) {
+                        return 'El motivo debe tener al menos 10 caracteres'
                     }
                 }
             }).then((result) => {
