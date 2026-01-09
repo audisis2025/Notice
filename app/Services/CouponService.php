@@ -6,6 +6,8 @@ use App\Models\Coupon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Models\ActivityLog;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * CouponService

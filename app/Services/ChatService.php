@@ -8,6 +8,8 @@ use App\Models\Message;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use App\Models\ActivityLog;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * ChatService

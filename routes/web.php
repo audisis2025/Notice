@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BusinessController;
@@ -10,162 +11,116 @@ use App\Http\Controllers\CouponController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ReportController;
-use Illuminate\Support\Facades\Auth;
-use App\Livewire\Chat\ChatComponent;
+use App\Http\Controllers\ChatController;
 
-/**
- * ============================================================================
- * RUTAS PÚBLICAS
- * ============================================================================
- */
-
-// Página principal
+// Ruta raíz
 Route::get('/', function () {
-    if (auth()->check()) {
-        return redirect()->route('dashboard');
-    }
     return view('welcome');
 })->name('home');
 
-/**
- * ============================================================================
- * RUTAS PROTEGIDAS - REQUIEREN AUTENTICACIÓN
- * ============================================================================
- */
+// ============================================================================
+// IMPORTANTE: NO incluir require auth.php porque Fortify maneja las rutas
+// ============================================================================
+// Fortify automáticamente registra estas rutas:
+// - GET/POST /login
+// - GET/POST /register
+// - POST /logout
+// - GET/POST /forgot-password
+// - GET/POST /reset-password
+// - GET/POST /verify-email
+// - GET/POST /confirm-password
+// - GET/POST /two-factor-challenge
+// ============================================================================
 
-Route::middleware(['auth', 'verified'])->group(function () {
-
-    /**
-     * ========================================================================
-     * DASHBOARD
-     * ========================================================================
-     */
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('dashboard');
-
-    /**
-     * ========================================================================
-     * RUTAS DE SUPER ADMINISTRADOR
-     * ========================================================================
-     */
+// Rutas protegidas por autenticación
+Route::middleware(['auth'])->group(function () {
+    
+    // Dashboard con redirección según rol
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // ===================================================================
+    // RUTAS PARA SUPER ADMINISTRADOR
+    // ===================================================================
     Route::middleware(['role:SuperAdministrator'])->group(function () {
-
-        // Gestión de usuarios
+        
+        // Gestión de Usuarios
         Route::resource('users', UserController::class);
         Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
             ->name('users.toggle-status');
-
-        // Gestión de paquetes
+        
+        // Gestión de Paquetes
         Route::resource('packages', PackageController::class);
         Route::post('packages/{package}/toggle-status', [PackageController::class, 'toggleStatus'])
             ->name('packages.toggle-status');
-
-        // Gestión de cupones
+        
+        // Gestión de Cupones
         Route::resource('coupons', CouponController::class);
         Route::post('coupons/validate', [CouponController::class, 'validate'])
             ->name('coupons.validate');
-
-        // Gestión de negocios (vista completa)
-        Route::get('businesses', [BusinessController::class, 'index'])
-            ->name('businesses.index');
-        Route::get('businesses/{business}', [BusinessController::class, 'show'])
-            ->name('businesses.show');
+        Route::post('coupons/{coupon}/toggle-status', [CouponController::class, 'toggleStatus'])
+            ->name('coupons.toggle-status');
+        
+        // Gestión de Negocios
+        Route::get('businesses', [BusinessController::class, 'index'])->name('businesses.index');
+        Route::get('businesses/{business}', [BusinessController::class, 'show'])->name('businesses.show');
         Route::post('businesses/{business}/suspend', [BusinessController::class, 'suspend'])
             ->name('businesses.suspend');
         Route::post('businesses/{business}/reactivate', [BusinessController::class, 'reactivate'])
             ->name('businesses.reactivate');
     });
-
-    /**
-     * ========================================================================
-     * RUTAS DE ADMINISTRADOR DE NEGOCIO
-     * ========================================================================
-     */
+    
+    // ===================================================================
+    // RUTAS PARA ADMINISTRADOR DE NEGOCIO
+    // ===================================================================
     Route::middleware(['role:BusinessAdministrator'])->group(function () {
-
-        // Registro y gestión de negocio
-        Route::get('business/create', [BusinessController::class, 'create'])
-            ->name('business.create');
-        Route::post('business', [BusinessController::class, 'store'])
-            ->name('business.store');
-
-        Route::middleware(['business.owner'])->group(function () {
-            Route::get('business/edit', [BusinessController::class, 'edit'])
-                ->name('business.edit');
-            Route::put('business', [BusinessController::class, 'update'])
-                ->name('business.update');
-            Route::post('business/toggle-ratings', [BusinessController::class, 'toggleRatings'])
-                ->name('business.toggle-ratings');
-            Route::post('business/update-delivery-period', [BusinessController::class, 'updateDeliveryPeriod'])
-                ->name('business.update-delivery-period');
-
-            // Calificaciones del negocio
-            Route::get('business/ratings', [RatingController::class, 'index'])
-                ->name('business.ratings');
-
-            /**
-             * ================================================================
-             * CONTRATACIÓN DE PAQUETES
-             * ================================================================
-             */
-            Route::get('packages', [BusinessPackageController::class, 'index'])
-                ->name('packages.available');
-            Route::get('packages/{package}/contract', [BusinessPackageController::class, 'show'])
-                ->name('packages.show');
-            Route::post('packages/contract', [BusinessPackageController::class, 'contract'])
-                ->name('packages.contract');
-            Route::get('packages/history', [BusinessPackageController::class, 'history'])
-                ->name('packages.history');
-
-            /**
-             * ================================================================
-             * GESTIÓN DE ÓRDENES - REQUIERE PAQUETE ACTIVO Y NEGOCIO ACTIVO
-             * ================================================================
-             */
-            Route::middleware(['package.active', 'business.active'])->group(function () {
-                
-                // CRUD de órdenes
-                Route::resource('orders', OrderController::class);
-                
-                // Cambios de estado de orden
-                Route::post('orders/{order}/mark-paid', [OrderController::class, 'markAsPaid'])
-                    ->name('orders.mark-paid');
-                Route::post('orders/{order}/mark-ready', [OrderController::class, 'markAsReady'])
-                    ->name('orders.mark-ready');
-                Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])
-                    ->name('orders.cancel');
-                
-                // Recordatorios de órdenes
-                Route::post('orders/{order}/schedule-reminders', [OrderController::class, 'scheduleReminders'])
-                    ->name('orders.schedule-reminders');
-                
-                // Descargar QR
-                Route::get('orders/{order}/qr/{type}', [OrderController::class, 'downloadQR'])
-                    ->name('orders.download-qr');
-
-                /**
-                 * ========================================================
-                 * REPORTES Y ESTADÍSTICAS - REQUIERE CARACTERÍSTICA
-                 * ========================================================
-                 */
-                Route::middleware(['package.feature:reports'])->group(function () {
-                    Route::get('reports', [ReportController::class, 'index'])
-                        ->name('reports.index');
-                    Route::post('reports/generate', [ReportController::class, 'generate'])
-                        ->name('reports.generate');
-                    Route::post('reports/export', [ReportController::class, 'export'])
-                        ->name('reports.export');
-                });
-            });
+        
+        // Registro y edición del negocio
+        Route::get('business/create', [BusinessController::class, 'create'])->name('business.create');
+        Route::post('business', [BusinessController::class, 'store'])->name('business.store');
+        Route::get('business/edit', [BusinessController::class, 'edit'])->name('business.edit');
+        Route::put('business', [BusinessController::class, 'update'])->name('business.update');
+        Route::post('business/toggle-ratings', [BusinessController::class, 'toggleRatings'])
+            ->name('business.toggle-ratings');
+        Route::post('business/update-delivery-period', [BusinessController::class, 'updateDeliveryPeriod'])
+            ->name('business.update-delivery-period');
+        
+        // Paquetes disponibles para contratar
+        Route::get('packages/available', [BusinessPackageController::class, 'index'])
+            ->name('packages.available');
+        Route::get('packages/{package}/contract', [BusinessPackageController::class, 'show'])
+            ->name('packages.show');
+        Route::post('packages/contract', [BusinessPackageController::class, 'contract'])
+            ->name('packages.contract');
+        Route::get('packages/history', [BusinessPackageController::class, 'history'])
+            ->name('packages.history');
+        
+        // Órdenes (requiere paquete activo y negocio activo)
+        Route::middleware(['package.active', 'business.active'])->group(function () {
+            Route::resource('orders', OrderController::class);
+            Route::post('orders/{order}/mark-paid', [OrderController::class, 'markAsPaid'])
+                ->name('orders.mark-paid');
+            Route::post('orders/{order}/mark-ready', [OrderController::class, 'markAsReady'])
+                ->name('orders.mark-ready');
+            Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])
+                ->name('orders.cancel');
+            Route::post('orders/{order}/schedule-reminders', [OrderController::class, 'scheduleReminders'])
+                ->name('orders.schedule-reminders');
+            Route::get('orders/{order}/download-qr/{type}', [OrderController::class, 'downloadQR'])
+                ->name('orders.download-qr');
         });
+        
+        // Calificaciones del negocio
+        Route::get('business/ratings', [RatingController::class, 'index'])
+            ->name('business.ratings');
+        
+        // Reportes (requiere característica de reportes en el paquete)
+        Route::middleware(['package.feature:reports'])->group(function () {
+            Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+            Route::post('reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
+            Route::get('reports/export', [ReportController::class, 'export'])->name('reports.export');
+        });
+        
+        // Chat
+        Route::get('chat/{order}', [ChatController::class, 'show'])->name('chat.show');
     });
-
-    /**
-     * ========================================================================
-     * CHAT - LIVEWIRE COMPONENT
-     * ========================================================================
-     */
-    Route::get('chat/{order}', \App\Livewire\Chat\ChatComponent::class)
-        ->name('chat.show')
-        ->middleware(['auth']);
 });

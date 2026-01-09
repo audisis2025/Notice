@@ -7,6 +7,7 @@ use App\Http\Requests\ContractPackageRequest;
 use App\Services\BusinessPackageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Routing\Controller;
 
 /**
  * BusinessPackageController
