@@ -143,6 +143,15 @@ return [
     |
     */
 
+    'redirects' => [
+        'login' => null,
+        'logout' => null,
+        'password-confirmation' => null,
+        'register' => null,
+        'email-verification' => null,
+        'password-reset' => null,
+    ],
+    
     'features' => [
         Features::registration(),
         Features::resetPasswords(),
@@ -155,5 +164,4 @@ return [
             // 'window' => 0,
         ]),
     ],
-
 ];

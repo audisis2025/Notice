@@ -15,22 +15,12 @@ use App\Http\Controllers\ChatController;
 
 // Ruta raíz
 Route::get('/', function () {
-    return view('welcome');
+    $packages = \App\Models\Package::where('is_active', true)
+                                   ->orderBy('price')
+                                   ->get();
+    return view('welcome', compact('packages'));
 })->name('home');
 
-// ============================================================================
-// IMPORTANTE: NO incluir require auth.php porque Fortify maneja las rutas
-// ============================================================================
-// Fortify automáticamente registra estas rutas:
-// - GET/POST /login
-// - GET/POST /register
-// - POST /logout
-// - GET/POST /forgot-password
-// - GET/POST /reset-password
-// - GET/POST /verify-email
-// - GET/POST /confirm-password
-// - GET/POST /two-factor-challenge
-// ============================================================================
 
 // Rutas protegidas por autenticación
 Route::middleware(['auth'])->group(function () {

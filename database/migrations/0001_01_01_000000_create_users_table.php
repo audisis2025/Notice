@@ -1,4 +1,20 @@
 <?php
+/**
+ * Nombre de la clase           : CreateUsersTable
+ * Descripción de la clase      : Migración que crea la tabla users con email
+ *                                como campo principal de autenticación
+ * Fecha de creación            : 09/01/2026
+ * Elaboró                      : Jesús Núñez
+ * Fecha de liberación          : 09/01/2026
+ * Autorizó                     : Jesús Núñez
+ * Versión                      : 1.0
+ * Fecha de mantenimiento       : 
+ * Folio de mantenimiento       : 
+ * Tipo de mantenimiento        :
+ * Descripción del mantenimiento: 
+ * Responsable                  : 
+ * Revisor                      : 
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -11,12 +27,13 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique()->nullable();
-            $table->string('phone', 20)->unique();
+            $table->string('email')->unique();  // ← OBLIGATORIO para login
+            $table->string('phone', 20)->unique()->nullable();  // ← OPCIONAL
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->date('birth_date')->nullable();
-            $table->enum('role', ['SuperAdministrator', 'BusinessAdministrator', 'MobileUser'])->default('MobileUser');
+            $table->enum('role', ['SuperAdministrator', 'BusinessAdministrator', 'MobileUser'])
+                  ->default('MobileUser');
             $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();
@@ -39,15 +56,10 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Revierte las migraciones eliminando la tabla users.
-     *
-     * @return void
-     */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
     }
 };

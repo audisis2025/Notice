@@ -1,8 +1,8 @@
 {{-- 
 /**
  * Nombre de la vista           : welcome.blade.php
- * Descripción de la vista      : Página de bienvenida del sistema que muestra
- *                                las características y enlaces de acceso
+ * Descripción de la vista      : Página principal del sistema donde se muestran los paquetes
+ *                                disponibles y los enlaces para iniciar sesión o registrarse
  * Fecha de creación            : 09/01/2026
  * Elaboró                      : Jesús Núñez
  * Fecha de liberación          : 09/01/2026
@@ -16,175 +16,208 @@
  * Revisor                      : 
  */
 --}}
+
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="es">
+
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SISNOTICE</title>
-    @vite(['resources/css/app.css'])
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido - SISNOTICE</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="antialiased">
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        {{-- Navbar --}}
-        <nav class="bg-white shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center">
-                        <x-heroicon-o-bell-alert class="w-8 h-8 text-black mr-3" />
-                        <span class="text-2xl font-bold text-black">SISNOTICE</span>
-                    </div>
-                    
-                    <div class="flex items-center space-x-4">
-                        @auth
-                            <a href="{{ route('dashboard') }}" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-black transition">
-                                Dashboard
-                            </a>
-                        @else
-                            <a href="{{ route('login') }}" class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-black transition">
-                                Iniciar Sesión
-                            </a>
-                            <a href="{{ route('register') }}" class="px-4 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition">
-                                Registrarse
-                            </a>
-                        @endauth
-                    </div>
-                </div>
-            </div>
-        </nav>
 
-        {{-- Hero Section --}}
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-            <div class="text-center">
-                <div class="flex justify-center mb-8">
-                    <div class="p-6 bg-black rounded-full">
-                        <x-heroicon-o-bell-alert class="w-20 h-20 text-white" />
-                    </div>
-                </div>
-                
-                <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-                    Sistema de Notificaciones
-                    <span class="block text-black">para tu Negocio</span>
-                </h1>
-                
-                <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                    Gestiona tus órdenes, mantén informados a tus clientes y mejora la experiencia
-                    de servicio con nuestro sistema de notificaciones en tiempo real.
-                </p>
-                
-                <div class="flex justify-center space-x-4">
-                    <a href="{{ route('register') }}" class="px-8 py-4 bg-black text-white text-lg font-semibold rounded-lg hover:bg-gray-800 transition flex items-center">
-                        <x-heroicon-o-rocket-launch class="w-6 h-6 mr-2" />
-                        Comenzar Gratis
-                    </a>
-                    <a href="#features" class="px-8 py-4 bg-white text-black text-lg font-semibold rounded-lg border-2 border-black hover:bg-gray-50 transition flex items-center">
-                        <x-heroicon-o-information-circle class="w-6 h-6 mr-2" />
-                        Conocer Más
-                    </a>
-                </div>
+<body class="font-sans bg-zinc-50 dark:bg-zinc-900 text-black dark:text-white flex flex-col min-h-screen">
+    <header class="bg-white dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 py-4 shadow-sm">
+        <div class="w-full flex justify-between items-center px-6">
+            <div class="flex items-center gap-3">
+                <img src="{{ asset('images/logo_notice.png') }}" alt="SISNOTICE" class="h-12 w-auto rounded" />
+                <flux:heading level="1" size="xl" class="text-2xl !font-bold text-black dark:text-white">
+                    SISNOTICE
+                </flux:heading>
             </div>
+
+            <nav class="flex space-x-4">
+                <flux:button icon="user-circle" icon-variant="outline" variant="primary" :href="route('login')"
+                    class="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900">
+                    Iniciar sesión
+                </flux:button>
+
+                <flux:button icon="user-plus" icon-variant="outline" variant="primary" :href="route('register')"
+                    class="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900">
+                    Registrarse
+                </flux:button>
+            </nav>
         </div>
+    </header>
 
-        {{-- Features Section --}}
-        <div id="features" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Características Principales</h2>
-                <p class="text-xl text-gray-600">Todo lo que necesitas para gestionar tu negocio</p>
-            </div>
+    <main class="flex-grow container mx-auto px-6 py-16 text-center">
+        <flux:heading level="2" size="xl" class="text-4xl !font-extrabold mb-4">
+            Bienvenido a SISNOTICE
+        </flux:heading>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {{-- Feature 1 --}}
-                <div class="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition">
-                    <div class="p-3 bg-blue-100 rounded-lg inline-block mb-4">
-                        <x-heroicon-o-qr-code class="w-8 h-8 text-blue-600" />
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Códigos QR</h3>
-                    <p class="text-gray-600">
-                        Genera códigos QR automáticamente para asociar órdenes con clientes
-                        y confirmar entregas de manera segura.
-                    </p>
-                </div>
+        <flux:text class="text-lg text-black/70 dark:text-white/70 mb-12">
+            El sistema inteligente de notificaciones para negocios. Gestiona órdenes, notifica a tus clientes y optimiza
+            tu servicio.
+        </flux:text>
 
-                {{-- Feature 2 --}}
-                <div class="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition">
-                    <div class="p-3 bg-green-100 rounded-lg inline-block mb-4">
-                        <x-heroicon-o-bell class="w-8 h-8 text-green-600" />
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Notificaciones en Tiempo Real</h3>
-                    <p class="text-gray-600">
-                        Mantén a tus clientes informados con notificaciones push cuando sus
-                        órdenes estén listas.
-                    </p>
-                </div>
+        <flux:heading level="3" size="lg" class="text-2xl font-semibold mb-8">
+            Elige el paquete que mejor se adapte a tu negocio
+        </flux:heading>
 
-                {{-- Feature 3 --}}
-                <div class="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition">
-                    <div class="p-3 bg-purple-100 rounded-lg inline-block mb-4">
-                        <x-heroicon-o-chat-bubble-left-right class="w-8 h-8 text-purple-600" />
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Chat Integrado</h3>
-                    <p class="text-gray-600">
-                        Comunícate directamente con tus clientes cuando haya retrasos en
-                        las entregas.
-                    </p>
-                </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            @forelse ($packages as $package)
+                @php
+                    $isFeatured =
+                        str_contains(Str::lower($package->name), 'premium') ||
+                        str_contains(Str::lower($package->name), 'pro') ||
+                        $loop->index === 1;
+                    $periodLabel = $package->duration_days === 30 ? 'mes' : $package->duration_days . ' días';
+                @endphp
 
-                {{-- Feature 4 --}}
-                <div class="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition">
-                    <div class="p-3 bg-yellow-100 rounded-lg inline-block mb-4">
-                        <x-heroicon-o-star class="w-8 h-8 text-yellow-600" />
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Sistema de Calificaciones</h3>
-                    <p class="text-gray-600">
-                        Recibe feedback de tus clientes y mejora continuamente tu servicio.
-                    </p>
-                </div>
+                <div
+                    class="bg-white dark:bg-zinc-800 rounded-xl shadow-md p-6 flex flex-col {{ $isFeatured ? 'border-2 border-black' : 'border border-zinc-200 dark:border-zinc-700' }}">
 
-                {{-- Feature 5 --}}
-                <div class="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition">
-                    <div class="p-3 bg-red-100 rounded-lg inline-block mb-4">
-                        <x-heroicon-o-chart-bar class="w-8 h-8 text-red-600" />
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Reportes Detallados</h3>
-                    <p class="text-gray-600">
-                        Analiza el rendimiento de tu negocio con reportes y estadísticas
-                        avanzadas.
-                    </p>
-                </div>
-
-                {{-- Feature 6 --}}
-                <div class="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition">
-                    <div class="p-3 bg-gray-100 rounded-lg inline-block mb-4">
-                        <x-heroicon-o-device-phone-mobile class="w-8 h-8 text-gray-600" />
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">App Móvil</h3>
-                    <p class="text-gray-600">
-                        Tus clientes pueden gestionar sus órdenes desde la aplicación móvil
-                        iOS y Android.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        {{-- Footer --}}
-        <footer class="bg-gray-900 text-white py-12 mt-20">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex flex-col md:flex-row justify-between items-center">
-                    <div class="mb-4 md:mb-0">
-                        <div class="flex items-center">
-                            <x-heroicon-o-bell-alert class="w-8 h-8 mr-3" />
-                            <span class="text-2xl font-bold">SISNOTICE</span>
+                    {{-- Badge de destacado --}}
+                    @if ($isFeatured)
+                        <div class="mb-4">
+                            <span class="bg-black text-white text-xs font-semibold px-3 py-1 rounded-full">
+                                DESTACADO
+                            </span>
                         </div>
-                        <p class="mt-2 text-gray-400">Software Solutions</p>
+                    @endif
+
+                    <flux:heading level="4" size="lg"
+                        class="text-xl font-bold mb-2 text-black dark:text-white">
+                        {{ $package->name }}
+                    </flux:heading>
+
+                    <flux:text class="text-black/70 dark:text-white/70 flex-grow mb-4">
+                        {{-- Descripción basada en características --}}
+                        @if ($package->max_orders)
+                            Hasta {{ number_format($package->max_orders) }} órdenes
+                        @else
+                            Órdenes ilimitadas
+                        @endif
+                    </flux:text>
+
+                    {{-- Precio --}}
+                    <flux:text variant="strong" class="mt-4 text-3xl font-bold text-black dark:text-white">
+                        ${{ number_format($package->price, 2) }}
+                        <span class="text-base text-black/60 dark:text-white/60">/{{ $periodLabel }}</span>
+                    </flux:text>
+
+                    {{-- Características --}}
+                    <div class="mt-6 space-y-3 text-left text-sm text-black/70 dark:text-white/70">
+
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            {{ $package->duration_days }} días de duración
+                        </div>
+
+                        @if ($package->has_reports)
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                                Reportes avanzados
+                            </div>
+                        @endif
+
+                        @if ($package->has_statistics)
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                                Estadísticas detalladas
+                            </div>
+                        @endif
+
+                        @if ($package->has_filters)
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                                Filtros avanzados
+                            </div>
+                        @endif
+
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Retención de datos: {{ $package->data_retention_days }} días
+                        </div>
+
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Códigos QR ilimitados
+                        </div>
+
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Chat con clientes
+                        </div>
+
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M5 13l4 4L19 7" />
+                            </svg>
+                            Notificaciones automáticas
+                        </div>
+
                     </div>
-                    
-                    <div class="text-center md:text-right">
-                        <p class="text-gray-400">&copy; {{ date('Y') }} SISNOTICE. Todos los derechos reservados.</p>
-                        <p class="mt-1 text-sm text-gray-500">Sistema de Notificaciones de Órdenes</p>
+
+                </div>
+
+            @empty
+                <div class="col-span-1 md:col-span-3">
+                    <div class="text-center text-black/60 dark:text-white/60 py-8">
+                        <x-heroicon-o-inbox class="w-16 h-16 mx-auto mb-4 text-zinc-400" />
+                        <flux:text class="text-black/60 dark:text-white/60">
+                            Próximamente paquetes disponibles para tu negocio.
+                        </flux:text>
                     </div>
                 </div>
-            </div>
-        </footer>
-    </div>
+            @endforelse
+        </div>
+    </main>
+
+    <footer class="bg-black dark:bg-zinc-800 border-t border-zinc-200 dark:border-zinc-700 text-center py-6 mt-auto">
+        <flux:text variant="subtle" class="text-white dark:text-white/70 text-sm">
+            © {{ date('Y') }} SISNOTICE. Todos los derechos reservados.
+        </flux:text>
+
+        <p class="mt-2">
+            <flux:link href="#"
+                class="text-white hover:text-gray-200 text-sm underline-offset-4 hover:underline" target="_blank"
+                rel="noopener noreferrer">
+                Términos y Condiciones
+            </flux:link>
+        </p>
+    </footer>
 </body>
+
 </html>

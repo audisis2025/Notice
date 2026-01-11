@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Nombre de la clase           : Order
  * Descripción de la clase      : Modelo Eloquent que representa una orden creada por
@@ -15,6 +16,7 @@
  * Responsable                  : 
  * Revisor                      : 
  */
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -203,5 +205,20 @@ class Order extends Model
             ->filter(function ($order) {
                 return $order->isDelayedDelivery();
             });
+    }
+
+    public function qrCodes(): HasMany
+    {
+        return $this->hasMany(OrderQRCode::class);
+    }
+
+    public function associationQR(): HasOne
+    {
+        return $this->hasOne(OrderQRCode::class)->where('type', 'association');
+    }
+
+    public function deliveryQR(): HasOne
+    {
+        return $this->hasOne(OrderQRCode::class)->where('type', 'delivery')->latest();
     }
 }

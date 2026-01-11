@@ -56,7 +56,7 @@ class UserSeeder extends Seeder
         // Usuario móvil sin email (caso real)
         User::create([
             'name' => 'Carlos Ramírez',
-            'email' => null,
+            'email' => 'carlosrz@email.com',
             'phone' => '+5215523456789',
             'password' => Hash::make('Mobile123!'),
             'birth_date' => null,
