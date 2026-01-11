@@ -1,202 +1,273 @@
-<x-app-layout>
-    @section('page-title', 'Dashboard - ' . $business->business_name)
+{{--
+/**
+ * Nombre de la vista           : business-admin.blade.php
+ * Descripción de la vista      : Panel principal del Administrador de Negocio con estadísticas
+ *                                de órdenes y rendimiento
+ * Fecha de creación            : 09/01/2026
+ * Elaboró                      : Jesús Núñez
+ * Fecha de liberación          : 09/01/2026
+ * Autorizó                     : Jesús Núñez
+ * Versión                      : 1.0
+ * Fecha de mantenimiento       : 
+ * Folio de mantenimiento       : 
+ * Tipo de mantenimiento        :
+ * Descripción del mantenimiento: 
+ * Responsable                  : 
+ * Revisor                      : 
+ */
+--}}
 
-    <div class="space-y-6">
-        <!-- Paquete Activo -->
-        @if($activePackage)
-            <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="flex items-center mb-2">
-                            <x-heroicon-o-check-badge class="w-6 h-6 mr-2" />
-                            <h3 class="text-lg font-semibold">Paquete Activo: {{ $activePackage->package->name }}</h3>
-                        </div>
-                        <p class="text-green-100">
-                            Válido hasta: {{ $activePackage->end_date->format('d/m/Y') }}
-                            ({{ $activePackage->end_date->diffInDays(now()) }} días restantes)
-                        </p>
-                    </div>
-                    <div>
-                        <flux:button 
-                            variant="ghost" 
-                            href="{{ route('packages.available') }}"
-                            class="text-white border-white hover:bg-white hover:text-green-600"
-                        >
-                            Ver Paquetes
-                        </flux:button>
-                    </div>
-                </div>
-            </div>
-        @else
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg">
-                <div class="flex items-center">
-                    <x-heroicon-o-exclamation-triangle class="w-6 h-6 text-yellow-600 mr-3" />
-                    <div class="flex-1">
-                        <h3 class="text-lg font-semibold text-yellow-800">No tienes un paquete activo</h3>
-                        <p class="text-yellow-700 mt-1">Contrata un paquete para acceder a todas las funcionalidades.</p>
-                    </div>
-                    <flux:button 
-                        variant="warning" 
-                        href="{{ route('packages.available') }}"
-                        class="ml-4"
-                    >
-                        Contratar Ahora
-                    </flux:button>
-                </div>
-            </div>
-        @endif
+<x-layouts.app.sidebar :title="__('Dashboard')">
 
-        <!-- Estadísticas del Negocio -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Órdenes Hoy</p>
-                        <p class="mt-2 text-3xl font-bold text-gray-900">
-                            {{ $business->orders()->whereDate('created_at', today())->count() }}
-                        </p>
-                    </div>
-                    <div class="p-3 bg-blue-100 rounded-full">
-                        <x-heroicon-o-shopping-bag class="w-8 h-8 text-blue-600" />
-                    </div>
-                </div>
-            </div>
+    @if(session('success'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: '{{ session('success') }}',
+                    confirmButtonColor: '#000000',
+                    confirmButtonText: 'Aceptar'
+                });
+            });
+        </script>
+    @endif
 
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Órdenes Listas</p>
-                        <p class="mt-2 text-3xl font-bold text-gray-900">
-                            {{ $business->orders()->where('status', 'ready')->count() }}
-                        </p>
-                    </div>
-                    <div class="p-3 bg-yellow-100 rounded-full">
-                        <x-heroicon-o-clock class="w-8 h-8 text-yellow-600" />
-                    </div>
-                </div>
-            </div>
+    @if(session('error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '{{ session('error') }}',
+                    confirmButtonColor: '#dc2626',
+                    confirmButtonText: 'Aceptar'
+                });
+            });
+        </script>
+    @endif
 
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Calificación</p>
-                        <p class="mt-2 text-3xl font-bold text-gray-900">
-                            {{ number_format($business->averageRating, 1) }} ⭐
-                        </p>
-                    </div>
-                    <div class="p-3 bg-green-100 rounded-full">
-                        <x-heroicon-o-star class="w-8 h-8 text-green-600" />
-                    </div>
-                </div>
-            </div>
+    @if(!$hasBusiness)
+    <div class="max-w-6xl mx-auto p-6">
+        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 mb-6">
+            <flux:heading size="sm" class="text-black dark:text-white">
+                Configura tu negocio
+            </flux:heading>
 
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Total Órdenes</p>
-                        <p class="mt-2 text-3xl font-bold text-gray-900">
-                            {{ $business->orders()->count() }}
-                        </p>
-                    </div>
-                    <div class="p-3 bg-purple-100 rounded-full">
-                        <x-heroicon-o-chart-bar class="w-8 h-8 text-purple-600" />
-                    </div>
-                </div>
-            </div>
-        </div>
+            <p class="text-sm text-black/70 dark:text-white/70 mt-1">
+                Aún no has registrado tu negocio. Para comenzar a operar y ver estadísticas,
+                primero crea tu negocio.
+            </p>
 
-        <!-- Órdenes Recientes -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                    <x-heroicon-o-clock class="w-6 h-6 mr-2" />
-                    Órdenes Recientes
-                </h3>
-                <flux:button 
-                    variant="ghost" 
-                    href="{{ route('orders.index') }}"
-                    icon="arrow-right"
-                >
-                    Ver todas
+            <div class="mt-3 flex justify-end"> 
+                <flux:button icon="plus" icon-variant="outline" :href="route('business.create')" variant="primary" class="bg-green-600 hover:bg-green-700 text-white text-sm">
+                    Crear negocio
                 </flux:button>
-            </div>
-
-            <div class="p-6">
-                @if($recentOrders->count() > 0)
-                    <div class="space-y-4">
-                        @foreach($recentOrders as $order)
-                            <div class="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition">
-                                <div class="flex items-center space-x-4">
-                                    <div class="p-2 bg-gray-100 rounded">
-                                        <x-heroicon-o-shopping-bag class="w-6 h-6 text-gray-600" />
-                                    </div>
-                                    <div>
-                                        <p class="font-semibold text-gray-900">{{ $order->order_number }}</p>
-                                        <p class="text-sm text-gray-500">{{ $order->created_at->diffForHumans() }}</p>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center space-x-4">
-                                    <p class="font-bold text-gray-900">${{ number_format($order->amount, 2) }}</p>
-                                    <x-badge-status :status="$order->status" />
-                                    <flux:button 
-                                        variant="primary" 
-                                        outline 
-                                        size="sm"
-                                        href="{{ route('orders.show', $order) }}"
-                                    >
-                                        <x-heroicon-o-eye class="w-4 h-4" />
-                                    </flux:button>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <x-empty-state
-                        icon="shopping-bag"
-                        title="No hay órdenes"
-                        description="Aún no has creado ninguna orden"
-                        actionText="Crear Primera Orden"
-                        actionUrl="{{ route('orders.create') }}"
-                    />
-                @endif
-            </div>
-        </div>
-
-        <!-- Accesos Rápidos -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <x-heroicon-o-bolt class="w-6 h-6 mr-2" />
-                Accesos Rápidos
-            </h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <a href="{{ route('orders.create') }}" class="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-black hover:shadow-md transition">
-                    <x-heroicon-o-plus-circle class="w-8 h-8 text-gray-600 mr-3" />
-                    <div>
-                        <p class="font-medium text-gray-900">Nueva Orden</p>
-                        <p class="text-sm text-gray-500">Crear orden</p>
-                    </div>
-                </a>
-
-                <a href="{{ route('business.edit') }}" class="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-black hover:shadow-md transition">
-                    <x-heroicon-o-cog-6-tooth class="w-8 h-8 text-gray-600 mr-3" />
-                    <div>
-                        <p class="font-medium text-gray-900">Configuración</p>
-                        <p class="text-sm text-gray-500">Mi negocio</p>
-                    </div>
-                </a>
-
-                @can('access-reports')
-                    <a href="{{ route('reports.index') }}" class="flex items-center p-4 border-2 border-gray-200 rounded-lg hover:border-black hover:shadow-md transition">
-                        <x-heroicon-o-chart-bar class="w-8 h-8 text-gray-600 mr-3" />
-                        <div>
-                            <p class="font-medium text-gray-900">Reportes</p>
-                            <p class="text-sm text-gray-500">Estadísticas</p>
-                        </div>
-                    </a>
-                @endcan
             </div>
         </div>
     </div>
-</x-app-layout>
+    @endif
+
+    @if($hasBusiness)
+    <div class="max-w-6xl mx-auto p-6 space-y-8">
+
+        <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5">
+            <flux:heading size="sm" class="text-black dark:text-white">
+                Gestiona tu negocio
+            </flux:heading>
+
+            <p class="text-sm text-black/70 dark:text-white/70 mt-1">
+                Administra tus órdenes, revisa estadísticas y genera reportes de tu negocio.
+            </p>
+
+            <div class="mt-3 flex flex-wrap gap-2 justify-end"> 
+                <flux:button icon="plus" icon-variant="outline" :href="route('orders.create')" variant="primary" class="bg-green-600 hover:bg-green-700 text-white text-sm">
+                    Nueva Orden
+                </flux:button>
+
+                <flux:button icon="shopping-bag" icon-variant="outline" :href="route('orders.index')" variant="primary" class="bg-gray-600 hover:bg-gray-700 text-white text-sm">
+                    Ver Órdenes
+                </flux:button>
+
+                <flux:button icon="chart-bar" icon-variant="outline" :href="route('reports.index')" variant="primary" class="bg-gray-500 hover:bg-gray-600 text-white text-sm">
+                    Ver Reportes
+                </flux:button>
+            </div>
+        </div>
+
+        <!-- Estadísticas de órdenes -->
+        <div class="grid md:grid-cols-4 gap-4">
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
+                <flux:heading size="sm" class="mb-2 text-black dark:text-white">
+                    Total Órdenes
+                </flux:heading>
+
+                <div class="text-3xl font-bold mt-1 text-green-600">
+                    {{ $stats['total_orders'] ?? 0 }}
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
+                <flux:heading size="sm" class="mb-2 text-black dark:text-white">
+                    Órdenes Pendientes
+                </flux:heading>
+
+                <div class="text-3xl font-bold mt-1 text-yellow-600">
+                    {{ $stats['pending_orders'] ?? 0 }}
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
+                <flux:heading size="sm" class="mb-2 text-black dark:text-white">
+                    Órdenes Completadas
+                </flux:heading>
+
+                <div class="text-3xl font-bold mt-1 text-blue-600">
+                    {{ $stats['completed_orders'] ?? 0 }}
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
+                <flux:heading size="sm" class="mb-2 text-black dark:text-white">
+                    Calificación Promedio
+                </flux:heading>
+
+                <div class="text-3xl font-bold mt-1 text-purple-600">
+                    {{ number_format($stats['average_rating'] ?? 0, 1) }}
+                    <span class="text-base text-gray-500">/ 5</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficas -->
+        <div class="grid md:grid-cols-3 gap-4">
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
+                <flux:heading size="sm" class="mb-2 text-black dark:text-white">
+                    Órdenes por Estado
+                </flux:heading>
+
+                <div style="height:220px">
+                    <canvas id="chartOrdersByStatus"></canvas>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
+                <flux:heading size="sm" class="mb-2 text-black dark:text-white">
+                    Órdenes por Mes
+                </flux:heading>
+
+                <div style="height:220px">
+                    <canvas id="chartOrdersByMonth"></canvas>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4 bg-white dark:bg-zinc-900">
+                <flux:heading size="sm" class="mb-2 text-black dark:text-white">
+                    Ingresos Mensuales
+                </flux:heading>
+
+                <div style="height:220px">
+                    <canvas id="chartRevenue"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script>
+            function renderDashboardCharts() {
+                const dataOrdersByStatus = @json($chartData['orders_by_status'] ?? []);
+                const dataOrdersByMonth = @json($chartData['orders_by_month'] ?? []);
+                const dataRevenue = @json($chartData['revenue'] ?? []);
+
+                const L = (arr) => arr.map(i => i.label || i.name || '');
+                const V = (arr) => arr.map(i => Number(i.total || i.value || i.count || 0));
+
+                const baseOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                maxRotation: 0,
+                                autoSkip: true
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        }
+                    }
+                };
+
+                const barDataset = (values, color) => ({
+                    data: values,
+                    maxBarThickness: 28,
+                    barPercentage: 0.9,
+                    categoryPercentage: 0.9,
+                    backgroundColor: color
+                });
+
+                if (window.dashboardCharts) {
+                    window.dashboardCharts.forEach(c => c.destroy());
+                }
+                window.dashboardCharts = [];
+
+                const ctx1 = document.getElementById('chartOrdersByStatus');
+                const ctx2 = document.getElementById('chartOrdersByMonth');
+                const ctx3 = document.getElementById('chartRevenue');
+
+                if (ctx1) {
+                    window.dashboardCharts.push(new Chart(ctx1, {
+                        type: 'bar',
+                        data: {
+                            labels: L(dataOrdersByStatus),
+                            datasets: [{
+                                ...barDataset(V(dataOrdersByStatus), '#10b981')
+                            }]
+                        },
+                        options: baseOptions
+                    }));
+                }
+
+                if (ctx2) {
+                    window.dashboardCharts.push(new Chart(ctx2, {
+                        type: 'bar',
+                        data: {
+                            labels: L(dataOrdersByMonth),
+                            datasets: [{
+                                ...barDataset(V(dataOrdersByMonth), '#3b82f6')
+                            }]
+                        },
+                        options: baseOptions
+                    }));
+                }
+
+                if (ctx3) {
+                    window.dashboardCharts.push(new Chart(ctx3, {
+                        type: 'bar',
+                        data: {
+                            labels: L(dataRevenue),
+                            datasets: [{
+                                ...barDataset(V(dataRevenue), '#a855f7')
+                            }]
+                        },
+                        options: baseOptions
+                    }));
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', renderDashboardCharts);
+            document.addEventListener('livewire:navigated', renderDashboardCharts);
+        </script>
+    @endpush
+    @endif
+</x-layouts.app.sidebar>

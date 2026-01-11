@@ -1,8 +1,8 @@
 {{--
 /**
  * Nombre de la vista           : header.blade.php
- * Descripción de la vista      : Componente de encabezado principal de la aplicación con navegación,
- *                                menú de usuario y sidebar responsivo
+ * Descripción de la vista      : Componente de encabezado principal con navegación
+ *                                y menú de usuario
  * Fecha de creación            : 09/01/2026
  * Elaboró                      : Jesús Núñez
  * Fecha de liberación          : 09/01/2026
@@ -10,7 +10,7 @@
  * Versión                      : 1.0
  * Fecha de mantenimiento       : 
  * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
+ * Tipo de mantenimiento        : 
  * Descripción del mantenimiento: 
  * Responsable                  : 
  * Revisor                      : 
@@ -37,36 +37,36 @@
 
             <flux:navbar class="-mb-px max-lg:hidden">
                 <flux:navbar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                    {{ __('Dashboard') }}
+                    Dashboard
                 </flux:navbar.item>
 
                 @can('viewAny', App\Models\User::class)
                     <flux:navbar.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>
-                        {{ __('Usuarios') }}
+                        Usuarios
                     </flux:navbar.item>
                 @endcan
 
                 @can('viewAny', App\Models\Package::class)
                     <flux:navbar.item icon="cube" :href="route('packages.index')" :current="request()->routeIs('packages.*')" wire:navigate>
-                        {{ __('Paquetes') }}
+                        Paquetes
                     </flux:navbar.item>
                 @endcan
 
                 @can('viewAny', App\Models\Business::class)
                     <flux:navbar.item icon="building-storefront" :href="route('businesses.index')" :current="request()->routeIs('businesses.*')" wire:navigate>
-                        {{ __('Negocios') }}
+                        Negocios
                     </flux:navbar.item>
                 @endcan
 
                 @can('viewAny', App\Models\Coupon::class)
                     <flux:navbar.item icon="ticket" :href="route('coupons.index')" :current="request()->routeIs('coupons.*')" wire:navigate>
-                        {{ __('Cupones') }}
+                        Cupones
                     </flux:navbar.item>
                 @endcan
 
                 @if(auth()->user()->role === 'BusinessAdministrator')
                     <flux:navbar.item icon="shopping-bag" :href="route('orders.index')" :current="request()->routeIs('orders.*')" wire:navigate>
-                        {{ __('Órdenes') }}
+                        Órdenes
                     </flux:navbar.item>
                 @endif
             </flux:navbar>
@@ -85,9 +85,7 @@
                         <div class="p-0 text-sm font-normal">
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
                                 <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-lg">
-                                    <span
-                                        class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white"
-                                    >
+                                    <span class="flex h-full w-full items-center justify-center rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
                                         {{ auth()->user()->initials() }}
                                     </span>
                                 </span>
@@ -102,18 +100,10 @@
 
                     <flux:menu.separator />
 
-                    <flux:menu.radio.group>
-                        <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
-                            {{ __('Perfil') }}
-                        </flux:menu.item>
-                    </flux:menu.radio.group>
-
-                    <flux:menu.separator />
-
                     <form method="POST" action="{{ route('logout') }}" class="w-full">
                         @csrf
                         <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full" data-test="logout-button">
-                            {{ __('Cerrar Sesión') }}
+                            Cerrar Sesión
                         </flux:menu.item>
                     </form>
                 </flux:menu>
@@ -136,36 +126,36 @@
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Menú')">
                     <flux:navlist.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
+                        Dashboard
                     </flux:navlist.item>
 
                     @can('viewAny', App\Models\User::class)
                         <flux:navlist.item icon="users" :href="route('users.index')" :current="request()->routeIs('users.*')" wire:navigate>
-                            {{ __('Usuarios') }}
+                            Usuarios
                         </flux:navlist.item>
                     @endcan
 
                     @can('viewAny', App\Models\Package::class)
                         <flux:navlist.item icon="cube" :href="route('packages.index')" :current="request()->routeIs('packages.*')" wire:navigate>
-                            {{ __('Paquetes') }}
+                            Paquetes
                         </flux:navlist.item>
                     @endcan
 
                     @can('viewAny', App\Models\Business::class)
                         <flux:navlist.item icon="building-storefront" :href="route('businesses.index')" :current="request()->routeIs('businesses.*')" wire:navigate>
-                            {{ __('Negocios') }}
+                            Negocios
                         </flux:navlist.item>
                     @endcan
 
                     @can('viewAny', App\Models\Coupon::class)
                         <flux:navlist.item icon="ticket" :href="route('coupons.index')" :current="request()->routeIs('coupons.*')" wire:navigate>
-                            {{ __('Cupones') }}
+                            Cupones
                         </flux:navlist.item>
                     @endcan
 
                     @if(auth()->user()->role === 'BusinessAdministrator')
                         <flux:navlist.item icon="shopping-bag" :href="route('orders.index')" :current="request()->routeIs('orders.*')" wire:navigate>
-                            {{ __('Órdenes') }}
+                            Órdenes
                         </flux:navlist.item>
                     @endif
                 </flux:navlist.group>

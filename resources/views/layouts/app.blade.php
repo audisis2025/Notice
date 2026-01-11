@@ -135,7 +135,6 @@
             </main>
         </div>
     </div>
-
     @livewireScripts
     
     <!-- SweetAlert2 -->

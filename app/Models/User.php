@@ -177,4 +177,21 @@ class User extends Authenticatable
     {
         return $query->where('role', $role);
     }
+    /**
+     * Obtener las iniciales del usuario
+     * 
+     * @return string
+     */
+    public function initials(): string
+    {
+        $words = explode(' ', trim($this->name));
+
+        if (count($words) >= 2) {
+            // Si tiene dos o más palabras, toma la primera letra de las primeras dos
+            return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
+        }
+
+        // Si solo tiene una palabra, toma las primeras dos letras
+        return strtoupper(substr($this->name, 0, 2));
+    }
 }
