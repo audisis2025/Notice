@@ -9,10 +9,9 @@
  * Autorizó                     : Jesús Núñez
  * Versión                      : 1.0
  * Fecha de mantenimiento       : 13/01/2026
- * Folio de mantenimiento       : 2
+ * Folio de mantenimiento       : 3
  * Tipo de mantenimiento        : Correctivo
- * Descripción del mantenimiento: Corrección del método render() para resolver
- *                                variable undefined $users
+ * Descripción del mantenimiento: Corrección de error MethodNotFoundException
  * Responsable                  : Jesús Núñez
  * Revisor                      : Jesús Núñez
  */
@@ -22,8 +21,6 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\On;
 use App\Models\User;
-use App\Services\UserService;
-use Illuminate\Support\Facades\Hash;
 
 class UserManagement extends Component
 {
@@ -50,7 +47,7 @@ class UserManagement extends Component
     public $is_active = true;
 
     /**
-     * Reglas de validación
+     * Reglas de validación SIMPLIFICADAS
      */
     protected function rules()
     {
@@ -59,57 +56,9 @@ class UserManagement extends Component
             'email' => 'nullable|email|max:255|unique:users,email,' . $this->userId,
             'phone' => 'required|string|max:20|unique:users,phone,' . $this->userId,
             'password' => $this->editMode ? 'nullable|min:8|confirmed' : 'required|min:8|confirmed',
-            'birth_date' => 'nullable|date|before:today',
             'role' => 'required|in:SuperAdministrator,BusinessAdministrator,MobileUser',
             'is_active' => 'boolean',
         ];
-    }
-
-    /**
-     * Mensajes de validación personalizados
-     */
-    protected $messages = [
-        'name.required' => 'El nombre es obligatorio.',
-        'phone.required' => 'El teléfono es obligatorio.',
-        'phone.unique' => 'Este teléfono ya está registrado.',
-        'email.email' => 'El correo debe ser válido.',
-        'email.unique' => 'Este correo ya está registrado.',
-        'password.required' => 'La contraseña es obligatoria.',
-        'password.min' => 'La contraseña debe tener al menos 8 caracteres.',
-        'password.confirmed' => 'Las contraseñas no coinciden.',
-        'role.required' => 'El rol es obligatorio.',
-    ];
-
-    /**
-     * Validación en tiempo real
-     */
-    public function updated($propertyName)
-    {
-        $this->validateOnly($propertyName);
-    }
-
-    /**
-     * Resetea la paginación cuando cambia la búsqueda
-     */
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
-    /**
-     * Resetea la paginación cuando cambia el filtro de rol
-     */
-    public function updatingRoleFilter()
-    {
-        $this->resetPage();
-    }
-
-    /**
-     * Resetea la paginación cuando cambia el filtro de estado
-     */
-    public function updatingStatusFilter()
-    {
-        $this->resetPage();
     }
 
     /**
@@ -177,66 +126,41 @@ class UserManagement extends Component
     }
 
     /**
-     * Guarda el usuario (crear o actualizar)
+     * Guarda el usuario (crear o actualizar) - VERSIÓN SIMPLIFICADA
      */
     public function save()
     {
         $this->validate();
 
-        try {
-            $userService = app(UserService::class);
+        $data = [
+            'name' => $this->name,
+            'email' => $this->email ?: null,
+            'phone' => $this->phone,
+            'role' => $this->role,
+            'birth_date' => $this->birth_date ?: null,
+            'is_active' => $this->is_active,
+        ];
 
+        if (!empty($this->password)) {
+            $data['password'] = bcrypt($this->password);
+        }
+
+        try {
             if ($this->editMode) {
-                $user = User::findOrFail($this->userId);
-                $userService->updateUser($user, $this->getFormData());
+                User::findOrFail($this->userId)->update($data);
                 $message = 'Usuario actualizado exitosamente';
             } else {
-                $userService->createUser($this->getFormData());
+                User::create($data);
                 $message = 'Usuario creado exitosamente';
             }
 
             $this->showModal = false;
             $this->resetForm();
             
-            // Mostrar mensaje de éxito
             session()->flash('success', $message);
 
         } catch (\Exception $e) {
-            // Mostrar mensaje de error
             session()->flash('error', 'Error: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Confirma y elimina un usuario
-     */
-    public function deleteConfirm($userId)
-    {
-        $this->userId = $userId;
-        $this->dispatch('confirm-delete', userId: $userId);
-    }
-
-    /**
-     * Elimina el usuario
-     */
-    #[On('user-delete-confirmed')]
-    public function delete($userId)
-    {
-        try {
-            $userService = app(UserService::class);
-            $user = User::findOrFail($userId);
-            
-            // No permitir eliminar el propio usuario
-            if ($user->id === auth()->id()) {
-                session()->flash('error', 'No puedes eliminar tu propio usuario.');
-                return;
-            }
-
-            $userService->deleteUser($user);
-            session()->flash('success', 'Usuario eliminado exitosamente');
-
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error al eliminar: ' . $e->getMessage());
         }
     }
 
@@ -247,14 +171,36 @@ class UserManagement extends Component
     {
         try {
             $user = User::findOrFail($userId);
-            $userService = app(UserService::class);
-            $userService->toggleUserStatus($user, !$user->is_active);
+            $user->update(['is_active' => !$user->is_active]);
 
-            $message = $user->is_active ? 'Usuario desactivado' : 'Usuario activado';
+            $message = $user->fresh()->is_active ? 'Usuario activado' : 'Usuario desactivado';
             session()->flash('success', $message);
 
         } catch (\Exception $e) {
             session()->flash('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Elimina el usuario
+     */
+    #[On('user-delete-confirmed')]
+    public function delete($userId)
+    {
+        try {
+            $user = User::findOrFail($userId);
+            
+            // No permitir eliminar el propio usuario
+            if ($user->id === auth()->id()) {
+                session()->flash('error', 'No puedes eliminar tu propio usuario.');
+                return;
+            }
+
+            $user->delete();
+            session()->flash('success', 'Usuario eliminado exitosamente');
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al eliminar: ' . $e->getMessage());
         }
     }
 
@@ -272,37 +218,34 @@ class UserManagement extends Component
      */
     private function resetForm()
     {
-        $this->userId = null;
-        $this->name = '';
-        $this->email = '';
-        $this->phone = '';
-        $this->password = '';
-        $this->password_confirmation = '';
-        $this->role = 'MobileUser';
-        $this->birth_date = '';
-        $this->is_active = true;
+        $this->reset([
+            'userId', 'name', 'email', 'phone', 'password', 
+            'password_confirmation', 'role', 'birth_date', 'is_active'
+        ]);
         $this->resetErrorBag();
     }
 
     /**
-     * Obtiene los datos del formulario
+     * Resetea la paginación cuando cambia la búsqueda
      */
-    private function getFormData()
+    public function updatingSearch()
     {
-        $data = [
-            'name' => $this->name,
-            'email' => $this->email ?: null,
-            'phone' => $this->phone,
-            'role' => $this->role,
-            'birth_date' => $this->birth_date ?: null,
-            'is_active' => $this->is_active,
-        ];
+        $this->resetPage();
+    }
 
-        if (!empty($this->password)) {
-            $data['password'] = $this->password;
-            $data['password_confirmation'] = $this->password_confirmation;
-        }
+    /**
+     * Resetea la paginación cuando cambia el filtro de rol
+     */
+    public function updatingRoleFilter()
+    {
+        $this->resetPage();
+    }
 
-        return $data;
+    /**
+     * Resetea la paginación cuando cambia el filtro de estado
+     */
+    public function updatingStatusFilter()
+    {
+        $this->resetPage();
     }
 }

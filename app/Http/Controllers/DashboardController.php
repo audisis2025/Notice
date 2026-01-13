@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Nombre de la clase           : DashboardController
  * Descripción de la clase      : Controlador que gestiona la lógica del dashboard
@@ -15,6 +16,7 @@
  * Responsable                  : 
  * Revisor                      : 
  */
+
 namespace App\Http\Controllers;
 
 use App\Services\ReportService;
@@ -67,20 +69,6 @@ class DashboardController extends Controller
     }
 
     /**
-     * Dashboard para SuperAdministrador.
-     *
-     * @return \Illuminate\View\View
-     */
-    protected function superAdminDashboard()
-    {
-        $statistics = $this->reportService->generateGlobalStatistics();
-
-        return view('dashboard.super-admin', [
-            'statistics' => $statistics,
-        ]);
-    }
-
-    /**
      * Dashboard para Administrador de Negocio.
      *
      * @return \Illuminate\View\View
@@ -90,22 +78,90 @@ class DashboardController extends Controller
         $user = Auth::user();
         $business = $user->business;
 
+        // Si no tiene negocio, mostrar mensaje
         if (!$business) {
-            return redirect()->route('business.create')
-                ->with('info', 'Primero debes registrar tu negocio.');
+            return view('dashboard.business-admin', [
+                'business' => null,
+                'stats' => [],
+                'chartData' => [],
+            ]);
         }
 
-        $recentOrders = $business->orders()
-            ->latest()
-            ->take(10)
-            ->get();
+        // Obtener estadísticas de órdenes
+        $stats = [
+            'total_orders' => $business->orders()->count(),
+            'pending_orders' => $business->orders()->where('status', 'pending')->count(),
+            'completed_orders' => $business->orders()->where('status', 'completed')->count(),
+            'average_rating' => $business->ratings()->avg('rating') ?? 0,
+        ];
 
-        $activePackage = $business->activePackage;
+        // Datos para gráficas
+        $chartData = [
+            'orders_by_status' => $this->getOrdersByStatus($business),
+            'orders_by_month' => $this->getOrdersByMonth($business),
+            'revenue' => $this->getRevenueByMonth($business),
+        ];
 
         return view('dashboard.business-admin', [
             'business' => $business,
-            'recentOrders' => $recentOrders,
-            'activePackage' => $activePackage,
+            'stats' => $stats,
+            'chartData' => $chartData,
         ]);
+    }
+
+    /**
+     * Obtener órdenes por estado
+     */
+    private function getOrdersByStatus($business)
+    {
+        return [
+            ['label' => 'Pendientes', 'count' => $business->orders()->where('status', 'pending')->count()],
+            ['label' => 'En Proceso', 'count' => $business->orders()->where('status', 'processing')->count()],
+            ['label' => 'Completadas', 'count' => $business->orders()->where('status', 'completed')->count()],
+            ['label' => 'Canceladas', 'count' => $business->orders()->where('status', 'cancelled')->count()],
+        ];
+    }
+
+    /**
+     * Obtener órdenes por mes
+     */
+    private function getOrdersByMonth($business)
+    {
+        $months = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $count = $business->orders()
+                ->whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->count();
+
+            $months[] = [
+                'label' => $date->format('M Y'),
+                'count' => $count
+            ];
+        }
+        return $months;
+    }
+
+    /**
+     * Obtener ingresos por mes
+     */
+    private function getRevenueByMonth($business)
+    {
+        $months = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $date = now()->subMonths($i);
+            $revenue = $business->orders()
+                ->whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->where('status', 'completed')
+                ->sum('total');
+
+            $months[] = [
+                'label' => $date->format('M Y'),
+                'value' => $revenue
+            ];
+        }
+        return $months;
     }
 }
