@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layouts.app.sidebar>
     @section('page-title', 'Contratar Paquete')
 
     <div class="max-w-7xl mx-auto">
@@ -125,4 +125,4 @@
             @endforeach
         </div>
     </div>
-</x-app-layout>
+</x-layouts.app.sidebar>

@@ -8,12 +8,13 @@
  * Fecha de liberación          : 09/01/2026
  * Autorizó                     : Jesús Núñez
  * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
+ * Fecha de mantenimiento       : 13/01/2026
+ * Folio de mantenimiento       : 2
+ * Tipo de mantenimiento        : Correctivo
+ * Descripción del mantenimiento: Corrección del método render() para resolver
+ *                                variable undefined $users
+ * Responsable                  : Jesús Núñez
+ * Revisor                      : Jesús Núñez
  */
 namespace App\Livewire\Users;
 
@@ -96,29 +97,51 @@ class UserManagement extends Component
     }
 
     /**
+     * Resetea la paginación cuando cambia el filtro de rol
+     */
+    public function updatingRoleFilter()
+    {
+        $this->resetPage();
+    }
+
+    /**
+     * Resetea la paginación cuando cambia el filtro de estado
+     */
+    public function updatingStatusFilter()
+    {
+        $this->resetPage();
+    }
+
+    /**
      * Renderiza el componente
      */
     public function render()
     {
-        $users = User::query()
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('name', 'like', "%{$this->search}%")
-                      ->orWhere('email', 'like', "%{$this->search}%")
-                      ->orWhere('phone', 'like', "%{$this->search}%");
-                });
-            })
-            ->when($this->roleFilter, function ($query) {
-                $query->where('role', $this->roleFilter);
-            })
-            ->when($this->statusFilter !== '', function ($query) {
-                $query->where('is_active', $this->statusFilter);
-            })
-            ->latest()
-            ->paginate(15);
+        $query = User::query();
+
+        // Filtro de búsqueda
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('name', 'like', '%' . $this->search . '%')
+                  ->orWhere('email', 'like', '%' . $this->search . '%')
+                  ->orWhere('phone', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        // Filtro por rol
+        if ($this->roleFilter) {
+            $query->where('role', $this->roleFilter);
+        }
+
+        // Filtro por estado
+        if ($this->statusFilter !== '') {
+            $query->where('is_active', $this->statusFilter);
+        }
+
+        $users = $query->latest()->paginate(15);
 
         return view('livewire.users.user-management', [
-            'users' => $users
+            'users' => $users,
         ]);
     }
 
@@ -174,10 +197,13 @@ class UserManagement extends Component
 
             $this->showModal = false;
             $this->resetForm();
-            $this->dispatch('success', message: $message);
+            
+            // Mostrar mensaje de éxito
+            session()->flash('success', $message);
 
         } catch (\Exception $e) {
-            $this->dispatch('error', message: 'Error: ' . $e->getMessage());
+            // Mostrar mensaje de error
+            session()->flash('error', 'Error: ' . $e->getMessage());
         }
     }
 
@@ -199,11 +225,18 @@ class UserManagement extends Component
         try {
             $userService = app(UserService::class);
             $user = User::findOrFail($userId);
-            $userService->deleteUser($user);
+            
+            // No permitir eliminar el propio usuario
+            if ($user->id === auth()->id()) {
+                session()->flash('error', 'No puedes eliminar tu propio usuario.');
+                return;
+            }
 
-            $this->dispatch('success', message: 'Usuario eliminado exitosamente');
+            $userService->deleteUser($user);
+            session()->flash('success', 'Usuario eliminado exitosamente');
+
         } catch (\Exception $e) {
-            $this->dispatch('error', message: 'Error al eliminar: ' . $e->getMessage());
+            session()->flash('error', 'Error al eliminar: ' . $e->getMessage());
         }
     }
 
@@ -218,10 +251,10 @@ class UserManagement extends Component
             $userService->toggleUserStatus($user, !$user->is_active);
 
             $message = $user->is_active ? 'Usuario desactivado' : 'Usuario activado';
-            $this->dispatch('toast', message: $message, type: 'success');
+            session()->flash('success', $message);
 
         } catch (\Exception $e) {
-            $this->dispatch('error', message: 'Error: ' . $e->getMessage());
+            session()->flash('error', 'Error: ' . $e->getMessage());
         }
     }
 

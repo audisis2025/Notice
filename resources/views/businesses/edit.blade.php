@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layouts.app.sidebar>
     @section('page-title', 'Editar Negocio')
 
     <div class="max-w-4xl mx-auto">
@@ -264,4 +264,4 @@
             </form>
         </div>
     </div>
-</x-app-layout>
+</x-layouts.app.sidebar>

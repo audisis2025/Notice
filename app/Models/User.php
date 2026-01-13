@@ -7,23 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-/**
- * Modelo User
- * 
- * Representa a los usuarios del sistema con diferentes roles:
- * - SuperAdministrator: Administrador global del sistema
- * - BusinessAdministrator: Administrador de negocio
- * - MobileUser: Usuario de la aplicación móvil
- *
- * @property int $id
- * @property string $name
- * @property string|null $email
- * @property string $phone
- * @property string $password
- * @property string|null $birth_date
- * @property string $role
- * @property bool $is_active
- */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes;
@@ -72,7 +55,7 @@ class User extends Authenticatable
      */
     public function business()
     {
-        return $this->hasOne(Business::class);
+        return $this->hasOne(Business::class, 'user_id');
     }
 
     /**

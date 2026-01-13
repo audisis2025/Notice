@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layouts.app.sidebar>
     @section('page-title', 'Historial de Paquetes')
 
     <div class="max-w-6xl mx-auto">
@@ -130,4 +130,4 @@
             @endif
         </div>
     </div>
-</x-app-layout>
+</x-layouts.app.sidebar>

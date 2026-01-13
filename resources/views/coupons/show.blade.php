@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layouts.app.sidebar>
     @section('page-title', 'Cupón ' . $coupon->code)
 
     <div class="max-w-4xl mx-auto">
@@ -140,4 +140,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-layouts.app.sidebar>

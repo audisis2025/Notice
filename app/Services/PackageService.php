@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Nombre de la clase           : PackageService
  * Descripción de la clase      : Servicio que encapsula la lógica de negocio
@@ -15,12 +16,15 @@
  * Responsable                  : 
  * Revisor                      : 
  */
+
 namespace App\Services;
 
 use App\Models\Package;
 use Illuminate\Support\Facades\DB;
 use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Business;
+use App\Models\BusinessPackage;
 
 /**
  * PackageService
@@ -40,18 +44,18 @@ class PackageService
     public function createPackage(array $data): Package
     {
         DB::beginTransaction();
-        
+
         try {
             $package = Package::create($data);
-            
+
             // Registrar actividad
             activity()
                 ->performedOn($package)
                 ->causedBy(auth()->user())
                 ->log('Paquete creado');
-            
+
             DB::commit();
-            
+
             return $package;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -69,18 +73,18 @@ class PackageService
     public function updatePackage(Package $package, array $data): Package
     {
         DB::beginTransaction();
-        
+
         try {
             $package->update($data);
-            
+
             // Registrar actividad
             activity()
                 ->performedOn($package)
                 ->causedBy(auth()->user())
                 ->log('Paquete actualizado');
-            
+
             DB::commit();
-            
+
             return $package;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -97,18 +101,18 @@ class PackageService
     public function deletePackage(Package $package): bool
     {
         DB::beginTransaction();
-        
+
         try {
             $package->delete();
-            
+
             // Registrar actividad
             activity()
                 ->performedOn($package)
                 ->causedBy(auth()->user())
                 ->log('Paquete eliminado');
-            
+
             DB::commit();
-            
+
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -137,5 +141,17 @@ class PackageService
     {
         $package->update(['is_active' => $isActive]);
         return $package;
+    }
+
+    public function subscribeBusinessToPackage($business, $package)
+    {
+        return BusinessPackage::create([
+            'business_id' => $business->id,
+            'package_id' => $package->id,
+            'start_date' => now(),
+            'end_date' => now()->addDays($package->duration_days),
+            'price_paid' => $package->price,
+            'status' => 'active',
+        ]);
     }
 }

@@ -1,4 +1,21 @@
-<x-app-layout>
+{{--
+/**
+ * Nombre de la vista           : create.blade.php
+ * Descripción de la vista      : Formulario para registrar un nuevo negocio
+ * Fecha de creación            : 09/01/2026
+ * Elaboró                      : Jesús Núñez
+ * Fecha de liberación          : 09/01/2026
+ * Autorizó                     : Jesús Núñez
+ * Versión                      : 1.0
+ * Fecha de mantenimiento       : 
+ * Folio de mantenimiento       : 
+ * Tipo de mantenimiento        :
+ * Descripción del mantenimiento: 
+ * Responsable                  : 
+ * Revisor                      : 
+ */
+ --}}
+ <x-layouts.app.sidebar>
     @section('page-title', 'Registrar Negocio')
 
     <div class="max-w-4xl mx-auto">
@@ -314,4 +331,4 @@
         });
     </script>
     @endpush
-</x-app-layout>
+ </x-layouts.app.sidebar>

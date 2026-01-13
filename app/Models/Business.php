@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Nombre de la clase           : Business
  * Descripción de la clase      : Modelo Eloquent que representa un negocio registrado
@@ -15,27 +16,13 @@
  * Responsable                  : 
  * Revisor                      : 
  */
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-/**
- * Modelo Business
- * 
- * Representa un negocio registrado en el sistema.
- *
- * @property int $id
- * @property int $user_id
- * @property string $business_name
- * @property string $legal_name
- * @property string $tax_id
- * @property string $address
- * @property bool $can_be_rated
- * @property int $delivery_period_minutes
- * @property bool $is_active
- */
 class Business extends Model
 {
     use HasFactory, SoftDeletes;
@@ -197,5 +184,15 @@ class Business extends Model
     public function scopeCanBeRated($query)
     {
         return $query->where('can_be_rated', true);
+    }
+
+    public function activePackage()
+    {
+        return $this->businessPackages()
+            ->where('status', 'active')
+            ->where('end_date', '>=', now())
+            ->with('package')
+            ->latest()
+            ->first();
     }
 }

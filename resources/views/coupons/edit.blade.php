@@ -1,5 +1,5 @@
 
-<x-app-layout>
+<x-layouts.app.sidebar>
     @section('page-title', 'Editar Cupón')
 
     <div class="max-w-3xl mx-auto">
@@ -130,4 +130,4 @@
             </form>
         </div>
     </div>
-</x-app-layout>
+</x-layouts.app.sidebar>

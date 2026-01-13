@@ -1,7 +1,26 @@
+{{--
+/**
+ * Nombre de la vista           : user-management.blade.php
+ * Descripción de la vista      : Componente Livewire para gestión completa de usuarios
+ *                                con filtros, búsqueda, paginación y CRUD
+ * Fecha de creación            : 09/01/2026
+ * Elaboró                      : Jesús Núñez
+ * Fecha de liberación          : 09/01/2026
+ * Autorizó                     : Jesús Núñez
+ * Versión                      : 1.0
+ * Fecha de mantenimiento       : 
+ * Folio de mantenimiento       : 
+ * Tipo de mantenimiento        :
+ * Descripción del mantenimiento: 
+ * Responsable                  : 
+ * Revisor                      : 
+ */
+--}}
+
 <div>
     {{-- Encabezado y botón crear --}}
     <div class="mb-6 flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-gray-800">Gestión de Usuarios</h2>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Gestión de Usuarios</h2>
         
         <flux:button 
             variant="primary" 
@@ -14,7 +33,7 @@
     </div>
 
     {{-- Filtros de búsqueda --}}
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             {{-- Búsqueda --}}
             <div class="md:col-span-2">
@@ -47,119 +66,140 @@
     </div>
 
     {{-- Tabla de usuarios --}}
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <flux:table>
-            <flux:thead>
-                <flux:tr>
-                    <flux:th>Nombre</flux:th>
-                    <flux:th>Email</flux:th>
-                    <flux:th>Teléfono</flux:th>
-                    <flux:th>Rol</flux:th>
-                    <flux:th>Estado</flux:th>
-                    <flux:th class="text-center">Acciones</flux:th>
-                </flux:tr>
-            </flux:thead>
-            <flux:tbody>
-                @forelse($users as $user)
-                    <flux:tr wire:key="user-{{ $user->id }}">
-                        <flux:td>
-                            <div class="flex items-center">
-                                <x-heroicon-o-user class="w-5 h-5 text-gray-400 mr-2" />
-                                {{ $user->name }}
-                            </div>
-                        </flux:td>
-                        <flux:td>
-                            <div class="flex items-center text-sm text-gray-600">
-                                @if($user->email)
-                                    <x-heroicon-o-envelope class="w-4 h-4 mr-1" />
-                                    {{ $user->email }}
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Nombre
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Email
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Teléfono
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Rol
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Estado
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    @forelse($users as $user)
+                        <tr wire:key="user-{{ $user->id }}" class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <x-heroicon-o-user class="w-5 h-5 text-gray-400 mr-2" />
+                                    <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        {{ $user->name }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                                    @if($user->email)
+                                        <x-heroicon-o-envelope class="w-4 h-4 mr-1" />
+                                        {{ $user->email }}
+                                    @else
+                                        <span class="text-gray-400">Sin email</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center text-sm text-gray-900 dark:text-gray-100">
+                                    <x-heroicon-o-phone class="w-4 h-4 text-gray-400 mr-1" />
+                                    {{ $user->phone ?? 'Sin teléfono' }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @if($user->role === 'SuperAdministrator')
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                        Super Admin
+                                    </span>
+                                @elseif($user->role === 'BusinessAdministrator')
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                        Admin Negocio
+                                    </span>
                                 @else
-                                    <span class="text-gray-400">Sin email</span>
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                        Usuario Móvil
+                                    </span>
                                 @endif
-                            </div>
-                        </flux:td>
-                        <flux:td>
-                            <div class="flex items-center text-sm">
-                                <x-heroicon-o-phone class="w-4 h-4 text-gray-400 mr-1" />
-                                {{ $user->phone }}
-                            </div>
-                        </flux:td>
-                        <flux:td>
-                            @if($user->role === 'SuperAdministrator')
-                                <flux:badge variant="danger">Super Admin</flux:badge>
-                            @elseif($user->role === 'BusinessAdministrator')
-                                <flux:badge variant="warning">Admin Negocio</flux:badge>
-                            @else
-                                <flux:badge variant="info">Usuario Móvil</flux:badge>
-                            @endif
-                        </flux:td>
-                        <flux:td>
-                            <button 
-                                wire:click="toggleStatus({{ $user->id }})"
-                                class="inline-flex items-center"
-                            >
-                                @if($user->is_active)
-                                    <flux:badge variant="success">
-                                        <x-heroicon-o-check-circle class="w-4 h-4 mr-1" />
-                                        Activo
-                                    </flux:badge>
-                                @else
-                                    <flux:badge variant="danger">
-                                        <x-heroicon-o-x-circle class="w-4 h-4 mr-1" />
-                                        Inactivo
-                                    </flux:badge>
-                                @endif
-                            </button>
-                        </flux:td>
-                        <flux:td>
-                            <div class="flex justify-center space-x-2">
-                                {{-- Botón Ver --}}
-                                <flux:button 
-                                    variant="primary" 
-                                    outline 
-                                    size="sm"
-                                    href="{{ route('users.show', $user) }}"
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <button 
+                                    wire:click="toggleStatus({{ $user->id }})"
+                                    class="inline-flex items-center"
                                 >
-                                    <x-heroicon-o-eye class="w-4 h-4" />
-                                </flux:button>
+                                    @if($user->is_active)
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                            <x-heroicon-o-check-circle class="w-4 h-4 mr-1" />
+                                            Activo
+                                        </span>
+                                    @else
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                                            <x-heroicon-o-x-circle class="w-4 h-4 mr-1" />
+                                            Inactivo
+                                        </span>
+                                    @endif
+                                </button>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                <div class="flex justify-center space-x-2">
+                                    {{-- Botón Ver --}}
+                                    <a 
+                                        href="{{ route('users.show', $user) }}"
+                                        class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-600"
+                                        title="Ver detalles"
+                                    >
+                                        <x-heroicon-o-eye class="w-5 h-5" />
+                                    </a>
 
-                                {{-- Botón Editar --}}
-                                <flux:button 
-                                    variant="warning" 
-                                    outline 
-                                    size="sm"
-                                    wire:click="edit({{ $user->id }})"
-                                >
-                                    <x-heroicon-o-pencil class="w-4 h-4" />
-                                </flux:button>
+                                    {{-- Botón Editar --}}
+                                    <button 
+                                        wire:click="edit({{ $user->id }})"
+                                        class="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-600"
+                                        title="Editar"
+                                    >
+                                        <x-heroicon-o-pencil class="w-5 h-5" />
+                                    </button>
 
-                                {{-- Botón Eliminar --}}
-                                <flux:button 
-                                    variant="danger" 
-                                    outline 
-                                    size="sm"
-                                    onclick="confirmUserDelete({{ $user->id }})"
-                                >
-                                    <x-heroicon-o-trash class="w-4 h-4" />
-                                </flux:button>
-                            </div>
-                        </flux:td>
-                    </flux:tr>
-                @empty
-                    <flux:tr>
-                        <flux:td colspan="6" class="text-center text-gray-500 py-8">
-                            <x-heroicon-o-user-group class="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                            <p>No se encontraron usuarios</p>
-                        </flux:td>
-                    </flux:tr>
-                @endforelse
-            </flux:tbody>
-        </flux:table>
+                                    {{-- Botón Eliminar --}}
+                                    <button 
+                                        onclick="confirmUserDelete({{ $user->id }})"
+                                        class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-600"
+                                        title="Eliminar"
+                                    >
+                                        <x-heroicon-o-trash class="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center">
+                                <x-heroicon-o-user-group class="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                                <p class="text-gray-500 dark:text-gray-400">No se encontraron usuarios</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
         {{-- Paginación --}}
-        <div class="px-6 py-4 border-t">
-            {{ $users->links() }}
-        </div>
+        @if($users->hasPages())
+            <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                {{ $users->links() }}
+            </div>
+        @endif
     </div>
 
     {{-- Modal de crear/editar --}}
@@ -168,7 +208,7 @@
             <form wire:submit="save">
                 <div class="space-y-4">
                     {{-- Título --}}
-                    <h3 class="text-xl font-semibold flex items-center">
+                    <h3 class="text-xl font-semibold flex items-center text-gray-900 dark:text-gray-100">
                         <x-heroicon-o-user-plus class="w-6 h-6 mr-2" />
                         {{ $editMode ? 'Editar Usuario' : 'Crear Usuario' }}
                     </h3>
@@ -188,9 +228,10 @@
 
                     {{-- Email --}}
                     <flux:input 
-                        label="Email (opcional)"
+                        label="Email"
                         type="email"
                         wire:model.blur="email"
+                        required
                         placeholder="correo@ejemplo.com"
                         error="{{ $errors->first('email') }}"
                     >
@@ -201,9 +242,8 @@
 
                     {{-- Teléfono --}}
                     <flux:input 
-                        label="Teléfono"
+                        label="Teléfono (opcional)"
                         wire:model.blur="phone"
-                        required
                         placeholder="+52 123 456 7890"
                         error="{{ $errors->first('phone') }}"
                     >
@@ -311,11 +351,8 @@
                 showCancelButton: true,
                 confirmButtonText: 'Sí, eliminar',
                 cancelButtonText: 'Cancelar',
-                customClass: {
-                    confirmButton: 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition',
-                    cancelButton: 'px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition ml-2'
-                },
-                buttonsStyling: false
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
             }).then((result) => {
                 if (result.isConfirmed) {
                     $wire.dispatch('user-delete-confirmed', { userId: userId });

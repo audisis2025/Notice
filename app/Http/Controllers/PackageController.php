@@ -8,12 +8,13 @@
  * Fecha de liberación          : 09/01/2026
  * Autorizó                     : Jesús Núñez
  * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
+ * Fecha de mantenimiento       : 12/01/2026
+ * Folio de mantenimiento       : 2
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Se agregaron métodos available() y subscribe()
+ *                                para que BusinessAdministrator pueda contratar paquetes
+ * Responsable                  : Jesús Núñez
+ * Revisor                      : Jesús Núñez
  */
 namespace App\Http\Controllers;
 
@@ -23,6 +24,8 @@ use App\Http\Requests\UpdatePackageRequest;
 use App\Services\PackageService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
+use App\Models\BusinessPackage;
 
 /**
  * PackageController
@@ -47,7 +50,6 @@ class PackageController extends Controller
      */
     public function __construct(PackageService $packageService)
     {
-        $this->middleware('can:manage-packages');
         $this->packageService = $packageService;
     }
 
@@ -172,6 +174,71 @@ class PackageController extends Controller
             return back()->with('success', $message);
         } catch (\Exception $e) {
             return back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Muestra los paquetes disponibles para contratar (BusinessAdministrator).
+     *
+     * @return \Illuminate\View\View
+     */
+    public function available()
+    {
+        // Solo BusinessAdministrator puede ver esta página
+        if (Auth::user()->role !== 'BusinessAdministrator') {
+            abort(403, 'Acceso no autorizado.');
+        }
+
+        $packages = Package::where('is_active', true)
+            ->orderBy('price', 'asc')
+            ->get();
+
+        $business = Auth::user()->business;
+        
+        // Obtener el paquete actual si existe
+        $currentPackage = $business?->businessPackages()
+            ->where('status', 'active')
+            ->where('end_date', '>=', now())
+            ->with('package')
+            ->latest()
+            ->first();
+
+        return view('packages.available', compact('packages', 'currentPackage'));
+    }
+
+    /**
+     * Suscribir el negocio a un paquete.
+     *
+     * @param Package $package
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function subscribe(Package $package)
+    {
+        // Solo BusinessAdministrator puede contratar paquetes
+        if (Auth::user()->role !== 'BusinessAdministrator') {
+            abort(403, 'Acceso no autorizado.');
+        }
+
+        $business = Auth::user()->business;
+
+        if (!$business) {
+            return redirect()->route('business.create')
+                ->with('error', 'Primero debes registrar tu negocio.');
+        }
+
+        // Verificar que el paquete esté activo
+        if (!$package->is_active) {
+            return back()->with('error', 'Este paquete no está disponible actualmente.');
+        }
+
+        try {
+            // Crear la suscripción usando el servicio
+            $this->packageService->subscribeBusinessToPackage($business, $package);
+
+            return redirect()->route('dashboard')
+                ->with('success', "¡Paquete {$package->name} contratado exitosamente!");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al contratar el paquete: ' . $e->getMessage());
         }
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Nombre de la clase           : BusinessController
  * Descripción de la clase      : Controlador que gestiona las operaciones CRUD
@@ -8,13 +9,16 @@
  * Fecha de liberación          : 09/01/2026
  * Autorizó                     : Jesús Núñez
  * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
+ * Fecha de mantenimiento       : 12/01/2026
+ * Folio de mantenimiento       : 1
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Tiene como objetivo mejorar la funcionalidad
+ *                                del controlador de negocios agregando nuevas
+ *                                características o optimizando las existentes.
+ * Responsable                  : Jesús Núñez
+ * Revisor                      : Jesús Núñez
  */
+
 namespace App\Http\Controllers;
 
 use App\Models\Business;
@@ -87,8 +91,15 @@ class BusinessController extends Controller
      */
     public function create()
     {
+        // Si ya tiene negocio, redirigir al dashboard
+        if (Auth::user()->business) {
+            return redirect()->route('dashboard')
+                ->with('info', 'Ya tienes un negocio registrado.');
+        }
+
         return view('businesses.create');
     }
+
 
     /**
      * Almacena un nuevo negocio en la base de datos.
@@ -102,8 +113,8 @@ class BusinessController extends Controller
             $user = Auth::user();
             $this->businessService->registerBusiness($user, $request->validated());
 
-            return redirect()->route('dashboard')
-                ->with('success', 'Negocio registrado exitosamente.');
+            return redirect()->route('packages.available')
+                ->with('success', '¡Negocio registrado exitosamente! Ahora puedes contratar un paquete.');
         } catch (\Exception $e) {
             return back()->withInput()
                 ->with('error', 'Error al registrar el negocio: ' . $e->getMessage());
@@ -201,8 +212,8 @@ class BusinessController extends Controller
         try {
             $this->businessService->toggleRatings($business, $request->can_be_rated);
 
-            $message = $request->can_be_rated 
-                ? 'Calificaciones habilitadas.' 
+            $message = $request->can_be_rated
+                ? 'Calificaciones habilitadas.'
                 : 'Calificaciones deshabilitadas.';
 
             return back()->with('success', $message);

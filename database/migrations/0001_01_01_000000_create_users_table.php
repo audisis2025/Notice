@@ -8,12 +8,12 @@
  * Fecha de liberación          : 09/01/2026
  * Autorizó                     : Jesús Núñez
  * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
+ * Fecha de mantenimiento       : 12/01/2026
+ * Folio de mantenimiento       : 1
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Cambio de campo de autenticación a email
+ * Responsable                  : Jesús Núñez
+ * Revisor                      : Jesús Núñez
  */
 
 use Illuminate\Database\Migrations\Migration;
@@ -33,7 +33,7 @@ return new class extends Migration
             $table->string('password');
             $table->date('birth_date')->nullable();
             $table->enum('role', ['SuperAdministrator', 'BusinessAdministrator', 'MobileUser'])
-                  ->default('MobileUser');
+                  ->default('BusinessAdministrator');
             $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();

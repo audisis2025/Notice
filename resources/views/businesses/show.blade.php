@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-layouts.app.sidebar>
     @section('page-title', $business->business_name)
 
     <div class="max-w-6xl mx-auto">
@@ -197,4 +197,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</x-layouts.app.sidebar>
