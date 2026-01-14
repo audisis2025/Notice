@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Nombre de la clase           : CheckActivePackage
  * Descripción de la clase      : Middleware que verifica que el negocio tenga
@@ -15,6 +16,7 @@
  * Responsable                  : 
  * Revisor                      : 
  */
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -52,8 +54,8 @@ class CheckActivePackage
         $business = $user->business;
 
         if (!$business || !$business->hasActivePackage()) {
-            return redirect()->route('packages.index')
-                ->with('warning', 'Debes contratar un paquete para acceder a esta funcionalidad.');
+            return redirect()->route('packages.available')
+                ->with('warning', 'Debes contratar un paquete para continuar.');
         }
 
         return $next($request);

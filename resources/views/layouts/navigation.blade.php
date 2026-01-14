@@ -8,15 +8,15 @@
  * Fecha de liberación          : 09/01/2026
  * Autorizó                     : Jesús Núñez
  * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
+ * Fecha de mantenimiento       : 13/01/2026
+ * Folio de mantenimiento       : 1
+ * Tipo de mantenimiento        : Correctivo
+ * Descripción del mantenimiento: Reemplazo de componentes Flux por HTML/Tailwind
+ * Responsable                  : Jesús Núñez
  * Revisor                      : 
  */
 --}}
-<aside class="w-64 bg-white shadow-lg flex flex-col">
+<aside class="w-64 bg-white shadow-lg flex flex-col h-full">
     <!-- Logo -->
     <div class="p-6 border-b">
         <div class="flex items-center justify-center">
@@ -26,140 +26,205 @@
     </div>
 
     <!-- Navigation Menu -->
-    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-        <flux:navlist>
-            <!-- Dashboard -->
-            <flux:navlist.item 
-                icon="home" 
-                href="{{ route('dashboard') }}"
-                :active="request()->routeIs('dashboard')"
+    <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        <!-- Dashboard -->
+        <a 
+            href="{{ route('dashboard') }}"
+            class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                   {{ request()->routeIs('dashboard') 
+                      ? 'bg-black text-white' 
+                      : 'text-gray-700 hover:bg-gray-100' }}"
+        >
+            <x-heroicon-o-home class="w-5 h-5 mr-3" />
+            Dashboard
+        </a>
+
+        @if(auth()->user()->isSuperAdministrator())
+            <!-- Super Admin Menu -->
+            
+            <!-- Grupo: Administración -->
+            <div class="mt-6 mb-2">
+                <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Administración
+                </h3>
+            </div>
+
+            <!-- Usuarios -->
+            <a 
+                href="{{ route('users.index') }}"
+                class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                       {{ request()->routeIs('users.*') 
+                          ? 'bg-black text-white' 
+                          : 'text-gray-700 hover:bg-gray-100' }}"
             >
-                Dashboard
-            </flux:navlist.item>
+                <x-heroicon-o-user-group class="w-5 h-5 mr-3" />
+                Usuarios
+            </a>
 
-            @if(auth()->user()->isSuperAdministrator())
-                <!-- Super Admin Menu -->
-                <flux:navlist.group heading="Administración" expandable>
-                    <flux:navlist.item 
-                        icon="user-group" 
-                        href="{{ route('users.index') }}"
-                        :active="request()->routeIs('users.*')"
-                    >
-                        Usuarios
-                    </flux:navlist.item>
+            <!-- Negocios -->
+            <a 
+                href="{{ route('businesses.index') }}"
+                class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                       {{ request()->routeIs('businesses.*') 
+                          ? 'bg-black text-white' 
+                          : 'text-gray-700 hover:bg-gray-100' }}"
+            >
+                <x-heroicon-o-building-office class="w-5 h-5 mr-3" />
+                Negocios
+            </a>
 
-                    <flux:navlist.item 
-                        icon="building-office" 
-                        href="{{ route('businesses.index') }}"
-                        :active="request()->routeIs('businesses.*')"
-                    >
-                        Negocios
-                    </flux:navlist.item>
+            <!-- Paquetes -->
+            <a 
+                href="{{ route('packages.index') }}"
+                class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                       {{ request()->routeIs('packages.*') 
+                          ? 'bg-black text-white' 
+                          : 'text-gray-700 hover:bg-gray-100' }}"
+            >
+                <x-heroicon-o-cube class="w-5 h-5 mr-3" />
+                Paquetes
+            </a>
 
-                    <flux:navlist.item 
-                        icon="cube" 
-                        href="{{ route('packages.index') }}"
-                        :active="request()->routeIs('packages.*')"
-                    >
-                        Paquetes
-                    </flux:navlist.item>
+            <!-- Cupones -->
+            <a 
+                href="{{ route('coupons.index') }}"
+                class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                       {{ request()->routeIs('coupons.*') 
+                          ? 'bg-black text-white' 
+                          : 'text-gray-700 hover:bg-gray-100' }}"
+            >
+                <x-heroicon-o-ticket class="w-5 h-5 mr-3" />
+                Cupones
+            </a>
 
-                    <flux:navlist.item 
-                        icon="ticket" 
-                        href="{{ route('coupons.index') }}"
-                        :active="request()->routeIs('coupons.*')"
-                    >
-                        Cupones
-                    </flux:navlist.item>
-                </flux:navlist.group>
+            <!-- Grupo: Reportes -->
+            <div class="mt-6 mb-2">
+                <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Reportes
+                </h3>
+            </div>
 
-                <flux:navlist.group heading="Reportes" expandable>
-                    <flux:navlist.item 
-                        icon="chart-bar" 
-                        href="#"
-                    >
-                        Estadísticas Globales
-                    </flux:navlist.item>
+            <!-- Estadísticas Globales -->
+            <a 
+                href="#"
+                class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                       text-gray-700 hover:bg-gray-100"
+            >
+                <x-heroicon-o-chart-bar class="w-5 h-5 mr-3" />
+                Estadísticas Globales
+            </a>
 
-                    <flux:navlist.item 
-                        icon="document-text" 
-                        href="#"
-                    >
-                        Reportes del Sistema
-                    </flux:navlist.item>
-                </flux:navlist.group>
-            @endif
+            <!-- Reportes del Sistema -->
+            <a 
+                href="#"
+                class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                       text-gray-700 hover:bg-gray-100"
+            >
+                <x-heroicon-o-document-text class="w-5 h-5 mr-3" />
+                Reportes del Sistema
+            </a>
+        @endif
 
-            @if(auth()->user()->isBusinessAdministrator())
-                <!-- Business Admin Menu -->
-                <flux:navlist.group heading="Mi Negocio" expandable>
-                    <flux:navlist.item 
-                        icon="building-storefront" 
-                        href="{{ route('business.edit') }}"
-                        :active="request()->routeIs('business.*')"
-                    >
-                        Datos del Negocio
-                    </flux:navlist.item>
+        @if(auth()->user()->isBusinessAdministrator())
+            <!-- Business Admin Menu -->
+            
+            <!-- Grupo: Mi Negocio -->
+            <div class="mt-6 mb-2">
+                <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Mi Negocio
+                </h3>
+            </div>
 
-                    <flux:navlist.item 
-                        icon="shopping-bag" 
-                        href="{{ route('orders.index') }}"
-                        :active="request()->routeIs('orders.*')"
-                    >
-                        Órdenes
-                    </flux:navlist.item>
+            <!-- Datos del Negocio -->
+            <a 
+                href="{{ route('business.edit') }}"
+                class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                       {{ request()->routeIs('business.*') 
+                          ? 'bg-black text-white' 
+                          : 'text-gray-700 hover:bg-gray-100' }}"
+            >
+                <x-heroicon-o-building-storefront class="w-5 h-5 mr-3" />
+                Datos del Negocio
+            </a>
 
-                    <flux:navlist.item 
-                        icon="star" 
-                        href="{{ route('business.ratings') }}"
-                        :active="request()->routeIs('business.ratings')"
-                    >
-                        Calificaciones
-                    </flux:navlist.item>
-                </flux:navlist.group>
+            <!-- Órdenes -->
+            <a 
+                href="{{ route('orders.index') }}"
+                class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                       {{ request()->routeIs('orders.*') 
+                          ? 'bg-black text-white' 
+                          : 'text-gray-700 hover:bg-gray-100' }}"
+            >
+                <x-heroicon-o-shopping-bag class="w-5 h-5 mr-3" />
+                Órdenes
+            </a>
 
-                <flux:navlist.group heading="Paquetes" expandable>
-                    <flux:navlist.item 
-                        icon="cube-transparent" 
-                        href="{{ route('packages.available') }}"
-                        :active="request()->routeIs('packages.available')"
-                    >
-                        Contratar Paquete
-                    </flux:navlist.item>
+            <!-- Calificaciones -->
+            <a 
+                href="{{ route('business.ratings') }}"
+                class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                       {{ request()->routeIs('business.ratings') 
+                          ? 'bg-black text-white' 
+                          : 'text-gray-700 hover:bg-gray-100' }}"
+            >
+                <x-heroicon-o-star class="w-5 h-5 mr-3" />
+                Calificaciones
+            </a>
 
-                    <flux:navlist.item 
-                        icon="clock" 
-                        href="{{ route('packages.history') }}"
-                        :active="request()->routeIs('packages.history')"
-                    >
-                        Mi Historial
-                    </flux:navlist.item>
-                </flux:navlist.group>
+            <!-- Grupo: Paquetes -->
+            <div class="mt-6 mb-2">
+                <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Paquetes
+                </h3>
+            </div>
 
-                @can('access-reports')
-                    <flux:navlist.group heading="Reportes" expandable>
-                        <flux:navlist.item 
-                            icon="chart-bar" 
-                            href="{{ route('reports.index') }}"
-                            :active="request()->routeIs('reports.*')"
-                        >
-                            Generar Reporte
-                        </flux:navlist.item>
+            <!-- Contratar Paquete -->
+            <a 
+                href="{{ route('packages.available') }}"
+                class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                       {{ request()->routeIs('packages.available') 
+                          ? 'bg-black text-white' 
+                          : 'text-gray-700 hover:bg-gray-100' }}"
+            >
+                <x-heroicon-o-cube-transparent class="w-5 h-5 mr-3" />
+                Contratar Paquete
+            </a>
 
-                        <flux:navlist.item 
-                            icon="presentation-chart-line" 
-                            href="#"
-                        >
-                            Estadísticas
-                        </flux:navlist.item>
-                    </flux:navlist.group>
-                @endcan
-            @endif
-        </flux:navlist>
+            @can('access-reports')
+                <!-- Grupo: Reportes -->
+                <div class="mt-6 mb-2">
+                    <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Reportes
+                    </h3>
+                </div>
+
+                <!-- Generar Reporte -->
+                <a 
+                    href="{{ route('reports.index') }}"
+                    class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                           {{ request()->routeIs('reports.*') 
+                              ? 'bg-black text-white' 
+                              : 'text-gray-700 hover:bg-gray-100' }}"
+                >
+                    <x-heroicon-o-chart-bar class="w-5 h-5 mr-3" />
+                    Generar Reporte
+                </a>
+
+                <!-- Estadísticas -->
+                <a 
+                    href="#"
+                    class="flex items-center px-4 py-3 text-sm rounded-lg transition-colors
+                           text-gray-700 hover:bg-gray-100"
+                >
+                    <x-heroicon-o-presentation-chart-line class="w-5 h-5 mr-3" />
+                    Estadísticas
+                </a>
+            @endcan
+        @endif
     </nav>
 
     <!-- Footer -->
-    <div class="p-4 border-t">
+    <div class="p-4 border-t mt-auto">
         <div class="text-xs text-gray-500 text-center">
             <p>&copy; {{ date('Y') }} SISNOTICE</p>
             <p class="mt-1">Software Solutions</p>

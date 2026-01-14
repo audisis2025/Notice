@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Nombre de la clase           : BusinessPackage
  * Descripción de la clase      : Modelo Eloquent que representa la contratación de un
@@ -15,6 +16,7 @@
  * Responsable                  : 
  * Revisor                      : 
  */
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,14 +26,11 @@ use Carbon\Carbon;
 
 /**
  * Modelo BusinessPackage
- * 
- * Representa la suscripción de un negocio a un paquete específico.
- *
- * @property int $id
+ * * @property int $id
  * @property int $business_id
  * @property int $package_id
- * @property string $start_date
- * @property string $end_date
+ * @property \Illuminate\Support\Carbon $start_date  // <--- CAMBIAR A CARBON
+ * @property \Illuminate\Support\Carbon $end_date    // <--- CAMBIAR A CARBON
  * @property float $price_paid
  * @property string $status
  */
@@ -111,24 +110,20 @@ class BusinessPackage extends Model
 
     /**
      * Verifica si la suscripción está activa.
-     *
-     * @return bool
      */
     public function isActive(): bool
     {
-        return $this->status === 'active' && 
-               Carbon::parse($this->end_date)->isFuture();
+        // $this->end_date YA ES un objeto Carbon gracias al cast
+        return $this->status === 'active' && $this->end_date->isFuture();
     }
 
     /**
      * Verifica si la suscripción está próxima a vencer.
-     *
-     * @param int $days Días antes del vencimiento
-     * @return bool
      */
     public function isNearExpiration(int $days = 7): bool
     {
-        $daysUntilExpiration = Carbon::now()->diffInDays(Carbon::parse($this->end_date), false);
+        // Mucho más directo:
+        $daysUntilExpiration = now()->diffInDays($this->end_date, false);
         return $daysUntilExpiration > 0 && $daysUntilExpiration <= $days;
     }
 

@@ -8,12 +8,13 @@
  * Fecha de liberación          : 09/01/2026
  * Autorizó                     : Jesús Núñez
  * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
+ * Fecha de mantenimiento       : 13/01/2026
+ * Folio de mantenimiento       : 2
+ * Tipo de mantenimiento        : Correctivo
+ * Descripción del mantenimiento: Eliminación de función activity() que no existe
+ *                                y uso de Log::info() en su lugar
+ * Responsable                  : Jesús Núñez
+ * Revisor                      : Jesús Núñez
  */
 namespace App\Services;
 
@@ -21,8 +22,7 @@ use App\Models\Business;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Models\ActivityLog;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 /**
  * BusinessService
@@ -45,21 +45,49 @@ class BusinessService
         DB::beginTransaction();
         
         try {
+            // ✅ AGREGAR LOG
+            Log::info('Iniciando registro de negocio', [
+                'user_id' => $user->id,
+                'data' => $data
+            ]);
+            
             // Procesar logo si existe
             if (isset($data['logo']) && $data['logo']) {
                 $logoPath = $data['logo']->store('businesses/logos', 'public');
                 $data['logo'] = $logoPath;
+                
+                Log::info('Logo procesado', ['path' => $logoPath]);
             }
+            
+            // ✅ Asegurar que can_be_rated sea boolean
+            $data['can_be_rated'] = isset($data['can_be_rated']) ? (bool)$data['can_be_rated'] : true;
             
             $data['user_id'] = $user->id;
             
+            // ✅ AGREGAR LOG
+            Log::info('Creando negocio con datos', $data);
+            
             $business = Business::create($data);
+            
+            // ✅ LOG en lugar de activity()
+            Log::info('Negocio registrado exitosamente', [
+                'business_id' => $business->id,
+                'business_name' => $business->business_name
+            ]);
             
             DB::commit();
             
             return $business;
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            // ✅ LOG del error
+            Log::error('Error al registrar negocio', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $user->id
+            ]);
+            
             throw $e;
         }
     }
@@ -89,11 +117,21 @@ class BusinessService
             
             $business->update($data);
             
+            Log::info('Negocio actualizado', [
+                'business_id' => $business->id
+            ]);
+            
             DB::commit();
             
             return $business;
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            Log::error('Error al actualizar negocio', [
+                'error' => $e->getMessage(),
+                'business_id' => $business->id
+            ]);
+            
             throw $e;
         }
     }
@@ -115,12 +153,12 @@ class BusinessService
                 'service_suspended_at' => now(),
             ]);
             
-            // Registrar actividad
-            activity()
-                ->performedOn($business)
-                ->causedBy(auth()->user())
-                ->withProperties(['reason' => $reason])
-                ->log('Servicio suspendido');
+            // ✅ LOG en lugar de activity()
+            Log::info('Servicio suspendido', [
+                'business_id' => $business->id,
+                'reason' => $reason,
+                'user_id' => auth()->id()
+            ]);
             
             DB::commit();
             
@@ -147,11 +185,11 @@ class BusinessService
                 'service_suspended_at' => null,
             ]);
             
-            // Registrar actividad
-            activity()
-                ->performedOn($business)
-                ->causedBy(auth()->user())
-                ->log('Servicio reactivado');
+            // ✅ LOG en lugar de activity()
+            Log::info('Servicio reactivado', [
+                'business_id' => $business->id,
+                'user_id' => auth()->id()
+            ]);
             
             DB::commit();
             

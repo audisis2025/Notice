@@ -29,6 +29,7 @@ use App\Services\BusinessService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+
 /**
  * BusinessController
  * 
@@ -109,13 +110,48 @@ class BusinessController extends Controller
      */
     public function store(StoreBusinessRequest $request)
     {
+        // ✅ LOG: Datos recibidos
+        \Log::info('=== INICIO REGISTRO DE NEGOCIO ===');
+        \Log::info('Datos recibidos:', $request->all());
+        \Log::info('Datos validados:', $request->validated());
+        \Log::info('Usuario:', [
+            'id' => Auth::id(),
+            'email' => Auth::user()->email,
+            'role' => Auth::user()->role
+        ]);
+
         try {
             $user = Auth::user();
-            $this->businessService->registerBusiness($user, $request->validated());
+
+            // ✅ LOG: Verificar si ya tiene negocio
+            if ($user->business) {
+                \Log::warning('Usuario ya tiene negocio registrado', ['business_id' => $user->business->id]);
+                return redirect()->route('dashboard')
+                    ->with('info', 'Ya tienes un negocio registrado.');
+            }
+
+            \Log::info('Llamando a BusinessService::registerBusiness');
+
+            $business = $this->businessService->registerBusiness($user, $request->validated());
+
+            $user->refresh();
+
+            \Log::info('Negocio registrado exitosamente', [
+                'business_id' => $business->id,
+                'business_name' => $business->business_name
+            ]);
+
+            \Log::info('=== FIN REGISTRO DE NEGOCIO (ÉXITO) ===');
 
             return redirect()->route('packages.available')
                 ->with('success', '¡Negocio registrado exitosamente! Ahora puedes contratar un paquete.');
         } catch (\Exception $e) {
+            \Log::error('=== ERROR EN REGISTRO DE NEGOCIO ===');
+            \Log::error('Mensaje:', ['error' => $e->getMessage()]);
+            \Log::error('Archivo:', ['file' => $e->getFile()]);
+            \Log::error('Línea:', ['line' => $e->getLine()]);
+            \Log::error('Trace:', ['trace' => $e->getTraceAsString()]);
+
             return back()->withInput()
                 ->with('error', 'Error al registrar el negocio: ' . $e->getMessage());
         }

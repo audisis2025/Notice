@@ -24,6 +24,18 @@ class StoreBusinessRequest extends FormRequest
     }
 
     /**
+     * ✅ AGREGAR ESTE MÉTODO
+     * Prepara los datos antes de la validación.
+     */
+    protected function prepareForValidation()
+    {
+        // Convertir checkbox a boolean (si viene, es true; si no viene, es false)
+        $this->merge([
+            'can_be_rated' => $this->has('can_be_rated') ? true : false,
+        ]);
+    }
+
+    /**
      * Obtiene las reglas de validación que se aplican a la petición.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>

@@ -20,6 +20,9 @@ class DatabaseSeeder extends Seeder
             SystemSettingSeeder::class,
             BusinessSeeder::class,
             CouponSeeder::class,
+            BusinessPackageSeeder::class,
+            //OrderSeeder::class,
+
         ]);
 
         // También puedes mantener el usuario de prueba como backup

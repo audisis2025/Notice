@@ -19,8 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'package.active' => \App\Http\Middleware\CheckActivePackage::class,
             'package.feature' => \App\Http\Middleware\CheckPackageFeature::class,
             'log.activity' => \App\Http\Middleware\LogActivity::class,
-            'has.business' => \App\Http\Middleware\EnsureHasBusiness::class,
-
+            'ensure.business' => \App\Http\Middleware\EnsureHasBusiness::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
