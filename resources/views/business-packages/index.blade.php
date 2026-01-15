@@ -1,4 +1,5 @@
 <x-layouts.app.sidebar>
+    <x-flash-messages />
     @section('page-title', 'Contratar Paquete')
 
     <div class="max-w-7xl mx-auto">

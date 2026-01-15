@@ -8,11 +8,11 @@
  * Elaboró                      : Jesús Núñez
  * Fecha de liberación          : 09/01/2026
  * Autorizó                     : Jesús Núñez
- * Versión                      : 2.1
+ * Versión                      : 2.2
  * Fecha de mantenimiento       : 15/01/2026
- * Folio de mantenimiento       : 2
+ * Folio de mantenimiento       : 3
  * Tipo de mantenimiento        : Correctivo
- * Descripción del mantenimiento: Agregado método currentPackage() como alias
+ * Descripción del mantenimiento: Agregados métodos averageRating() y currentPackage()
  * Responsable                  : Sistema
  * Revisor                      : Jesús Núñez
  */
@@ -119,7 +119,7 @@ class Business extends Model
     }
 
     /**
-     * Obtiene el paquete activo actual del negocio.
+     * Obtiene el paquete activo actual del negocio (accessor).
      */
     public function getActivePackageAttribute()
     {
@@ -139,9 +139,20 @@ class Business extends Model
     }
 
     /**
-     * Calcula el promedio de calificaciones del negocio.
+     * Calcula el promedio de calificaciones del negocio (accessor).
      */
     public function getAverageRatingAttribute(): float
+    {
+        return $this->ratings()->avg('stars') ?? 0;
+    }
+
+    /**
+     * Calcula el promedio de calificaciones del negocio (método).
+     * Alias para compatibilidad cuando se llama como método.
+     * 
+     * @return float
+     */
+    public function averageRating(): float
     {
         return $this->ratings()->avg('stars') ?? 0;
     }
@@ -164,7 +175,9 @@ class Business extends Model
     }
 
     /**
-     * Obtiene el paquete activo con detalles.
+     * Obtiene el paquete activo con detalles (método).
+     * 
+     * @return \App\Models\BusinessPackage|null
      */
     public function activePackage()
     {

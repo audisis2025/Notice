@@ -10,7 +10,9 @@
  * Descripción del mantenimiento: Actualización a estándar visual
  */
 -->>
+--}}
 <x-layouts.app.sidebar>
+    <x-flash-messages />
     <div class="p-6">
         <div class="mb-6">
             <h1 class="text-3xl font-bold text-black dark:text-white">

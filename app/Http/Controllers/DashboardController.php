@@ -3,9 +3,11 @@
 /**
  * Nombre de la clase           : DashboardController
  * Descripción de la clase      : Controlador que gestiona dashboards sin Services
- * Versión                      : 2.0
- * Fecha de mantenimiento       : 14/01/2026
- * Tipo de mantenimiento        : Perfectivo
+ * Versión                      : 2.1
+ * Fecha de mantenimiento       : 15/01/2026
+ * Tipo de mantenimiento        : Correctivo
+ * Descripción del mantenimiento: Corrección de datos para dashboard super-admin
+ *                                SIN afectar dashboard business-admin
  */
 
 namespace App\Http\Controllers;
@@ -13,6 +15,8 @@ namespace App\Http\Controllers;
 use App\Models\Business;
 use App\Models\Order;
 use App\Models\User;
+use App\Models\Package;
+use App\Models\Coupon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -44,30 +48,99 @@ class DashboardController extends Controller
 
     /**
      * Dashboard para SuperAdministrador.
+     * 
+     * ✅ MODIFICADO: Ahora envía $stats y $chartData en lugar de $statistics
      */
     protected function superAdminDashboard()
     {
-        // Generar estadísticas globales directamente
-        $statistics = [
+        // Estadísticas principales (las que espera la vista)
+        $stats = [
+            'total_users' => User::count(),
             'total_businesses' => Business::count(),
-            'active_businesses' => Business::active()->count(),
-            'total_orders' => Order::count(),
-            'total_revenue' => Order::sum('amount'),
-            'orders_this_month' => Order::whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
+            'active_businesses' => Business::where('is_active', true)->count(),
+            'available_coupons' => Coupon::where('is_active', true)
+                ->where('is_used', false)
+                ->where('expiration_date', '>=', now())
                 ->count(),
-            'revenue_this_month' => Order::whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
-                ->sum('amount'),
+        ];
+
+        // Datos para gráficas (las que espera la vista)
+        $chartData = [
+            'users_by_role' => $this->getUsersByRole(),
+            'businesses' => $this->getBusinessesData(),
+            'packages' => $this->getPackagesData(),
         ];
 
         return view('dashboard.super-admin', [
-            'statistics' => $statistics,
+            'stats' => $stats,
+            'chartData' => $chartData,
         ]);
     }
 
     /**
+     * ✅ NUEVO: Obtener usuarios por rol para gráfica
+     */
+    private function getUsersByRole()
+    {
+        $roles = [
+            'SuperAdministrator' => 'Super Admin',
+            'BusinessAdministrator' => 'Admin Negocio',
+            'MobileUser' => 'Usuario Móvil',
+        ];
+
+        $data = [];
+        foreach ($roles as $roleKey => $roleLabel) {
+            $count = User::where('role', $roleKey)->count();
+            $data[] = [
+                'label' => $roleLabel,
+                'total' => $count,
+            ];
+        }
+
+        return $data;
+    }
+
+    /**
+     * ✅ NUEVO: Obtener datos de negocios para gráfica
+     */
+    private function getBusinessesData()
+    {
+        return [
+            ['label' => 'Activos', 'total' => Business::where('is_active', true)->count()],
+            ['label' => 'Inactivos', 'total' => Business::where('is_active', false)->count()],
+        ];
+    }
+
+    /**
+     * ✅ NUEVO: Obtener datos de paquetes contratados para gráfica
+     */
+    private function getPackagesData()
+    {
+        $packages = Package::withCount('businessPackages')->get();
+
+        $data = [];
+        foreach ($packages as $package) {
+            $data[] = [
+                'label' => $package->name,
+                'total' => $package->business_packages_count ?? 0,
+            ];
+        }
+
+        // Si no hay datos, mostrar mensaje por defecto
+        if (empty($data)) {
+            $data[] = [
+                'label' => 'Sin paquetes',
+                'total' => 0,
+            ];
+        }
+
+        return $data;
+    }
+
+    /**
      * Dashboard para Administrador de Negocio.
+     * 
+     * ✅ SIN CAMBIOS: Se mantiene exactamente igual que antes
      */
     protected function businessAdminDashboard()
     {
@@ -107,6 +180,8 @@ class DashboardController extends Controller
 
     /**
      * Obtener órdenes por estado.
+     * 
+     * ✅ SIN CAMBIOS: Se mantiene exactamente igual que antes
      */
     private function getOrdersByStatus($business)
     {
@@ -121,6 +196,8 @@ class DashboardController extends Controller
 
     /**
      * Obtener órdenes por mes.
+     * 
+     * ✅ SIN CAMBIOS: Se mantiene exactamente igual que antes
      */
     private function getOrdersByMonth($business)
     {
@@ -142,6 +219,8 @@ class DashboardController extends Controller
 
     /**
      * Obtener ingresos por mes.
+     * 
+     * ✅ SIN CAMBIOS: Se mantiene exactamente igual que antes
      */
     private function getRevenueByMonth($business)
     {

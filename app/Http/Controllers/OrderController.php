@@ -4,12 +4,11 @@
  * Nombre de la clase           : OrderController
  * Descripción de la clase      : Controlador que gestiona las operaciones CRUD
  *                                de órdenes sin usar Services ni Livewire
- * Versión                      : 3.0
- * Fecha de mantenimiento       : 14/01/2026
- * Folio de mantenimiento       : 4
- * Tipo de mantenimiento        : Correctivo
- * Descripción del mantenimiento: Eliminación de Livewire, actualización para
- *                                vista Blade tradicional con filtros y estadísticas
+ * Versión                      : 3.1
+ * Fecha de mantenimiento       : 15/01/2026
+ * Folio de mantenimiento       : 5
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Mejora de mensajes SweetAlert sin modificar lógica
  */
 
 namespace App\Http\Controllers;
@@ -117,7 +116,7 @@ class OrderController extends Controller
             Log::info('=== FIN CREACIÓN DE ORDEN (ÉXITO) ===');
 
             return redirect()->route('orders.show-qr', $order)
-                ->with('success', '¡Orden creada exitosamente!');
+                ->with('success', '¡Orden creada exitosamente! Muestra el código QR al cliente.');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -163,7 +162,8 @@ class OrderController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Orden marcada como pagada exitosamente.');
+            return back()
+                ->with('success', '¡Orden marcada como pagada exitosamente!');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -172,7 +172,8 @@ class OrderController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return back()->with('error', 'Error al marcar la orden como pagada: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al marcar la orden como pagada: ' . $e->getMessage());
         }
     }
 
@@ -193,7 +194,8 @@ class OrderController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Orden marcada como lista para entrega.');
+            return back()
+                ->with('success', '¡Orden marcada como lista para entrega!');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -202,7 +204,8 @@ class OrderController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return back()->with('error', 'Error al marcar la orden como lista: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al marcar la orden como lista: ' . $e->getMessage());
         }
     }
 
@@ -228,7 +231,7 @@ class OrderController extends Controller
             DB::commit();
 
             return redirect()->route('orders.index')
-                ->with('success', 'Orden cancelada exitosamente.');
+                ->with('success', '¡Orden cancelada exitosamente!');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -237,7 +240,8 @@ class OrderController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return back()->with('error', 'Error al cancelar la orden: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al cancelar la orden: ' . $e->getMessage());
         }
     }
 
@@ -263,7 +267,8 @@ class OrderController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Recordatorios programados exitosamente.');
+            return back()
+                ->with('success', '¡Recordatorios programados exitosamente!');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -272,7 +277,8 @@ class OrderController extends Controller
                 'error' => $e->getMessage()
             ]);
 
-            return back()->with('error', 'Error al programar recordatorios: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al programar recordatorios: ' . $e->getMessage());
         }
     }
 
@@ -298,7 +304,8 @@ class OrderController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Estado de la orden actualizado correctamente.');
+            return back()
+                ->with('success', '¡Estado de la orden actualizado correctamente!');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -309,7 +316,8 @@ class OrderController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return back()->with('error', 'Error al cambiar el estado: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al cambiar el estado: ' . $e->getMessage());
         }
     }
 

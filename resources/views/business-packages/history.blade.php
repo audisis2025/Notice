@@ -1,4 +1,5 @@
 <x-layouts.app.sidebar>
+    <x-flash-messages />
     @section('page-title', 'Historial de Paquetes')
 
     <div class="max-w-6xl mx-auto">

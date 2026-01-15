@@ -1,4 +1,5 @@
 <x-layouts.app.sidebar>
+    <x-flash-messages />
     @section('page-title', 'Contratar ' . $package->name)
 
     <div class="max-w-4xl mx-auto">

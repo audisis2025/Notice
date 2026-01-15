@@ -4,9 +4,10 @@
  * Nombre de la clase           : CouponController
  * Descripción de la clase      : Controlador que gestiona las operaciones CRUD
  *                                de cupones sin Services
- * Versión                      : 2.0
- * Fecha de mantenimiento       : 14/01/2026
+ * Versión                      : 2.2
+ * Fecha de mantenimiento       : 15/01/2026
  * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Mejora de mensajes SweetAlert sin modificar lógica
  */
 
 namespace App\Http\Controllers;
@@ -17,6 +18,7 @@ use App\Http\Requests\UpdateCouponRequest;
 use App\Http\Requests\ValidateCouponRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * CouponController
@@ -27,16 +29,14 @@ use Illuminate\Support\Facades\DB;
  */
 class CouponController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('can:manage-coupons');
-    }
-
     /**
      * Muestra el listado de cupones.
      */
     public function index(Request $request)
     {
+        // Verificar autorización
+        Gate::authorize('manage-coupons');
+
         $query = Coupon::query();
 
         if ($request->filled('status')) {
@@ -61,6 +61,9 @@ class CouponController extends Controller
      */
     public function create()
     {
+        // Verificar autorización
+        Gate::authorize('manage-coupons');
+
         return view('coupons.create');
     }
 
@@ -69,6 +72,9 @@ class CouponController extends Controller
      */
     public function store(StoreCouponRequest $request)
     {
+        // Verificar autorización
+        Gate::authorize('manage-coupons');
+
         DB::beginTransaction();
 
         try {
@@ -77,7 +83,7 @@ class CouponController extends Controller
             DB::commit();
 
             return redirect()->route('coupons.index')
-                ->with('success', 'Cupón generado exitosamente.');
+                ->with('success', '¡Cupón generado exitosamente!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -92,6 +98,9 @@ class CouponController extends Controller
      */
     public function show(Coupon $coupon)
     {
+        // Verificar autorización
+        Gate::authorize('manage-coupons');
+
         return view('coupons.show', compact('coupon'));
     }
 
@@ -100,6 +109,9 @@ class CouponController extends Controller
      */
     public function edit(Coupon $coupon)
     {
+        // Verificar autorización
+        Gate::authorize('manage-coupons');
+
         return view('coupons.edit', compact('coupon'));
     }
 
@@ -108,6 +120,9 @@ class CouponController extends Controller
      */
     public function update(UpdateCouponRequest $request, Coupon $coupon)
     {
+        // Verificar autorización
+        Gate::authorize('manage-coupons');
+
         DB::beginTransaction();
 
         try {
@@ -116,7 +131,7 @@ class CouponController extends Controller
             DB::commit();
 
             return redirect()->route('coupons.index')
-                ->with('success', 'Cupón actualizado exitosamente.');
+                ->with('success', '¡Cupón actualizado exitosamente!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -131,6 +146,9 @@ class CouponController extends Controller
      */
     public function destroy(Coupon $coupon)
     {
+        // Verificar autorización
+        Gate::authorize('manage-coupons');
+
         DB::beginTransaction();
 
         try {
@@ -139,7 +157,7 @@ class CouponController extends Controller
             DB::commit();
 
             return redirect()->route('coupons.index')
-                ->with('success', 'Cupón eliminado exitosamente.');
+                ->with('success', '¡Cupón eliminado exitosamente!');
 
         } catch (\Exception $e) {
             DB::rollBack();

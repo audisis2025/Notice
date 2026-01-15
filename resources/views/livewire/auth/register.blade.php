@@ -7,17 +7,19 @@
  * Elaboró                      : Jesús Núñez
  * Fecha de liberación          : 09/01/2026
  * Autorizó                     : Jesús Núñez
- * Versión                      : 1.0
- * Fecha de mantenimiento       : 
+ * Versión                      : 2.0
+ * Fecha de mantenimiento       : 15/01/2026
  * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Integración con sistema global de SweetAlert2
+ * Responsable                  : Sistema
  * Revisor                      : 
  */
 --}}
-
 <x-layouts.auth>
+    {{-- Componente de mensajes flash --}}
+    <x-flash-messages />
+
     <style>
         .flex.h-9.w-9:has(svg),
         .flex.h-9.w-9:has(x-app-logo-icon),
@@ -36,7 +38,10 @@
     </style>
     
     <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Crear cuenta')" :description="__('Ingresa tus datos a continuación para crear tu cuenta')" />
+        <x-auth-header 
+            :title="__('Crear cuenta')" 
+            :description="__('Ingresa tus datos a continuación para crear tu cuenta')" 
+        />
 
         <x-auth-session-status class="text-center" :status="session('status')" />
 
@@ -114,20 +119,27 @@
 
         <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-black/60 dark:text-white/60">
             <span>{{ __('¿Ya tienes una cuenta?') }}</span>
-            <flux:link :href="route('login')" wire:navigate class="text-black hover:text-gray-700 dark:text-white dark:hover:text-gray-300">
+            <flux:link 
+                :href="route('login')" 
+                wire:navigate 
+                class="text-black hover:text-gray-700 dark:text-white dark:hover:text-gray-300"
+            >
                 {{ __('Iniciar sesión') }}
             </flux:link>
         </div>
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('registerForm');
             
+            // ============================================
+            // VALIDACIÓN DEL FORMULARIO
+            // ============================================
             if (form) {
                 form.addEventListener('submit', function(e) {
+                    // Limpiar bordes de error previos
                     document.querySelectorAll('input').forEach(input => {
                         input.style.borderColor = '';
                     });
@@ -137,18 +149,14 @@
                     const password = document.getElementById('password').value;
                     const passwordConfirmation = document.getElementById('password_confirmation').value;
                     
+                    // Validar campos vacíos
                     if (!nombre || !email || !password || !passwordConfirmation) {
                         e.preventDefault();
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Campos incompletos',
-                            text: 'Por favor, completa todos los campos requeridos.',
-                            confirmButtonText: 'Entendido',
-                            confirmButtonColor: '#dc2626'
-                        });
+                        showError('Por favor, completa todos los campos requeridos.', 'Campos incompletos');
                         return false;
                     }
                     
+                    // Validar formato de email
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                     if (!emailRegex.test(email)) {
                         e.preventDefault();
@@ -156,34 +164,24 @@
                         emailField.style.borderColor = '#dc2626';
                         emailField.style.borderWidth = '2px';
                         
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Correo inválido',
-                            text: 'Por favor, ingresa un correo electrónico válido.',
-                            confirmButtonText: 'Entendido',
-                            confirmButtonColor: '#dc2626'
-                        });
+                        showError('Por favor, ingresa un correo electrónico válido.', 'Correo inválido');
                         emailField.focus();
                         return false;
                     }
                     
+                    // Validar longitud de contraseña
                     if (password.length < 8) {
                         e.preventDefault();
                         const passwordField = document.getElementById('password');
                         passwordField.style.borderColor = '#dc2626';
                         passwordField.style.borderWidth = '2px';
                         
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Contraseña muy corta',
-                            text: 'La contraseña debe tener al menos 8 caracteres.',
-                            confirmButtonText: 'Entendido',
-                            confirmButtonColor: '#dc2626'
-                        });
+                        showError('La contraseña debe tener al menos 8 caracteres.', 'Contraseña muy corta');
                         passwordField.focus();
                         return false;
                     }
                     
+                    // Validar que las contraseñas coincidan
                     if (password !== passwordConfirmation) {
                         e.preventDefault();
                         const passwordField = document.getElementById('password');
@@ -194,22 +192,20 @@
                         confirmField.style.borderColor = '#dc2626';
                         confirmField.style.borderWidth = '2px';
                         
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Las contraseñas no coinciden',
-                            text: 'Por favor, asegúrate de que ambas contraseñas sean iguales.',
-                            confirmButtonText: 'Entendido',
-                            confirmButtonColor: '#dc2626'
-                        });
+                        showError('Por favor, asegúrate de que ambas contraseñas sean iguales.', 'Las contraseñas no coinciden');
                         confirmField.focus();
                         return false;
                     }
                 });
             }
             
+            // ============================================
+            // ERRORES DE VALIDACIÓN
+            // ============================================
             @if ($errors->any())
                 const errores = @json($errors->all());
                 
+                // Traducciones de errores comunes
                 const traducciones = {
                     'The email has already been taken.': 'El correo electrónico ya está registrado.',
                     'The password field must be at least 8 characters.': 'La contraseña debe tener al menos 8 caracteres.',
@@ -221,19 +217,15 @@
                     'The email field must be a valid email address.': 'El correo electrónico debe ser válido.'
                 };
                 
+                // Un solo error
                 if (errores.length === 1) {
                     const errorTraducido = traducciones[errores[0]] || errores[0];
-                    
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error en el registro',
-                        text: errorTraducido,
-                        confirmButtonText: 'Entendido',
-                        confirmButtonColor: '#dc2626'
-                    });
-                } else {
-                    let mensajeHtml = '<div style="text-align: center;">';
-                    mensajeHtml += '<ul style="margin: 0; padding-left: 0; list-style: none;">';
+                    showError(errorTraducido, 'Error en el registro');
+                } 
+                // Múltiples errores
+                else {
+                    let mensajeHtml = '<div style="text-align: left; padding-left: 1rem;">';
+                    mensajeHtml += '<ul style="margin: 0; padding-left: 1.5rem;">';
                     
                     errores.forEach(function(error) {
                         const errorTraducido = traducciones[error] || error;
@@ -246,11 +238,11 @@
                         icon: 'error',
                         title: 'Error en el registro',
                         html: mensajeHtml,
-                        confirmButtonText: 'Entendido',
-                        confirmButtonColor: '#dc2626'
+                        confirmButtonText: 'Entendido'
                     });
                 }
 
+                // Marcar campos con error
                 @foreach($errors->keys() as $field)
                     const field_{{ $field }} = document.getElementById('{{ $field }}');
                     if (field_{{ $field }}) {
@@ -258,46 +250,6 @@
                         field_{{ $field }}.style.borderWidth = '2px';
                     }
                 @endforeach
-            @endif
-            
-            @if (session('success'))
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Registro exitoso!',
-                    text: '{{ session("success") }}',
-                    confirmButtonText: 'Continuar',
-                    confirmButtonColor: '#10b981'
-                });
-            @endif
-            
-            @if (session('error'))
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: '{{ session("error") }}',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#dc2626'
-                });
-            @endif
-            
-            @if (session('warning'))
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Advertencia',
-                    text: '{{ session("warning") }}',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#f59e0b'
-                });
-            @endif
-            
-            @if (session('info'))
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Información',
-                    text: '{{ session("info") }}',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#3b82f6'
-                });
             @endif
         });
     </script>

@@ -6,12 +6,12 @@
  *                                de negocios sin usar Services
  * Fecha de creación            : 09/01/2026
  * Elaboró                      : Jesús Núñez
- * Versión                      : 2.0
- * Fecha de mantenimiento       : 14/01/2026
- * Folio de mantenimiento       : 2
+ * Versión                      : 2.1
+ * Fecha de mantenimiento       : 15/01/2026
+ * Folio de mantenimiento       : 3
  * Tipo de mantenimiento        : Perfectivo
- * Descripción del mantenimiento: Eliminación de Services - Lógica en Modelos y Controlador
- * Responsable                  : Jesús Núñez
+ * Descripción del mantenimiento: Mejora de mensajes SweetAlert sin modificar lógica
+ * Responsable                  : Sistema
  * Revisor                      : Jesús Núñez
  */
 
@@ -108,7 +108,7 @@ class BusinessController extends Controller
             Log::info('=== FIN REGISTRO DE NEGOCIO (ÉXITO) ===');
 
             return redirect()->route('select.package')
-                ->with('success', '¡Negocio registrado exitosamente!');
+                ->with('success', '¡Negocio registrado exitosamente! Ahora selecciona un paquete para comenzar.');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -153,8 +153,8 @@ class BusinessController extends Controller
 
             DB::commit();
 
-            return redirect()->route('businesses.show', $business)
-                ->with('success', 'Negocio actualizado exitosamente.');
+            return redirect()->route('dashboard')
+                ->with('success', '¡Negocio actualizado exitosamente!');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -175,11 +175,13 @@ class BusinessController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Servicio del negocio suspendido.');
+            return back()
+                ->with('success', '¡Servicio del negocio suspendido exitosamente!');
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Error al suspender: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al suspender el negocio: ' . $e->getMessage());
         }
     }
 
@@ -195,11 +197,13 @@ class BusinessController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Servicio del negocio reactivado.');
+            return back()
+                ->with('success', '¡Servicio del negocio reactivado exitosamente!');
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Error al reactivar: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al reactivar el negocio: ' . $e->getMessage());
         }
     }
 
@@ -216,14 +220,16 @@ class BusinessController extends Controller
             DB::commit();
 
             $message = $request->can_be_rated
-                ? 'Calificaciones habilitadas.'
-                : 'Calificaciones deshabilitadas.';
+                ? '¡Calificaciones habilitadas exitosamente!'
+                : '¡Calificaciones deshabilitadas exitosamente!';
 
-            return back()->with('success', $message);
+            return back()
+                ->with('success', $message);
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Error: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al actualizar configuración de calificaciones: ' . $e->getMessage());
         }
     }
 
@@ -243,11 +249,13 @@ class BusinessController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Período de entrega actualizado.');
+            return back()
+                ->with('success', '¡Período de entrega actualizado exitosamente!');
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Error: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al actualizar el período de entrega: ' . $e->getMessage());
         }
     }
 }

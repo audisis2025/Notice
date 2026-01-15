@@ -15,6 +15,7 @@
 </head>
 
 <body class="bg-gradient-to-br from-green-50 to-emerald-100 min-h-screen flex items-center justify-center p-4">
+    <x-flash-messages />
     <div class="max-w-md w-full">
         {{-- Tarjeta de éxito --}}
         <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">

@@ -22,7 +22,7 @@ Route::middleware('guest')->group(function () {
     Route::get('login', function () {
         return view('livewire.auth.login');
     })->name('login');
-    
+
     Route::post('login', function (\Illuminate\Http\Request $request) {
         $request->validate([
             'email' => 'required|email',
@@ -34,8 +34,9 @@ Route::middleware('guest')->group(function () {
             return redirect()->intended('/dashboard');
         }
 
+        // ✅ CORREGIDO: Usar traducción en vez de texto hardcodeado
         return back()->withErrors([
-            'email' => 'These credentials do not match our records.',
+            'email' => __('auth.failed'),
         ])->onlyInput('email');
     })->name('login.store');
 
@@ -43,7 +44,7 @@ Route::middleware('guest')->group(function () {
     Route::get('register', function () {
         return view('livewire.auth.register');
     })->name('register');
-    
+
     Route::post('register', function (\Illuminate\Http\Request $request) {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -71,7 +72,7 @@ Route::middleware('guest')->group(function () {
     Route::get('forgot-password', function () {
         return view('livewire.auth.forgot-password');
     })->name('password.request');
-    
+
     Route::post('forgot-password', function (\Illuminate\Http\Request $request) {
         $request->validate(['email' => 'required|email']);
 
@@ -88,7 +89,7 @@ Route::middleware('guest')->group(function () {
     Route::get('reset-password/{token}', function ($token) {
         return view('livewire.auth.reset-password', ['token' => $token]);
     })->name('password.reset');
-    
+
     Route::post('reset-password', function (\Illuminate\Http\Request $request) {
         $request->validate([
             'token' => 'required',
@@ -146,6 +147,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/', function () {
     $packages = \App\Models\Package::where('is_active', true)
         ->orderBy('price')
+        ->limit(3)
         ->get();
     return view('welcome', compact('packages'));
 })->name('home');
@@ -266,3 +268,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('chat/{order}', [ChatController::class, 'show'])->name('chat.show');
     });
 });
+
+// Términos y Privacidad (accesibles sin login)
+Route::get('/terminos', function () {
+    return view('terms');
+})->name('terms');
+
+Route::get('/privacidad', function () {
+    return view('privacy');
+})->name('privacy');

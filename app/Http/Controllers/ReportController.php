@@ -3,10 +3,10 @@
 /**
  * Nombre de la clase           : ReportController
  * Descripción de la clase      : Controlador que gestiona reportes sin Services
- * Versión                      : 2.1
+ * Versión                      : 2.2
  * Fecha de mantenimiento       : 15/01/2026
- * Tipo de mantenimiento        : Correctivo
- * Descripción del mantenimiento: Eliminado middleware del constructor (Laravel 11+)
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Mejora de mensajes SweetAlert sin modificar lógica
  */
 
 namespace App\Http\Controllers;
@@ -80,7 +80,8 @@ class ReportController extends Controller
             return view('reports.show', compact('report', 'business'));
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Error al generar reporte: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al generar reporte: ' . $e->getMessage());
         }
     }
 
@@ -114,7 +115,8 @@ class ReportController extends Controller
             return response()->download(storage_path("app/public/{$path}"));
 
         } catch (\Exception $e) {
-            return back()->with('error', 'Error al exportar reporte: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al exportar reporte: ' . $e->getMessage());
         }
     }
 

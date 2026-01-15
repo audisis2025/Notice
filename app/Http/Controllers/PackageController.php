@@ -4,10 +4,10 @@
  * Nombre de la clase           : PackageController
  * Descripción de la clase      : Controlador que gestiona las operaciones CRUD
  *                                de paquetes comerciales sin Services
- * Versión                      : 2.0
- * Fecha de mantenimiento       : 14/01/2026
+ * Versión                      : 2.1
+ * Fecha de mantenimiento       : 15/01/2026
  * Tipo de mantenimiento        : Perfectivo
- * Descripción del mantenimiento: Eliminación de Services - Lógica en Modelos y Controlador
+ * Descripción del mantenimiento: Mejora de mensajes SweetAlert sin modificar lógica
  */
 
 namespace App\Http\Controllers;
@@ -60,7 +60,7 @@ class PackageController extends Controller
             DB::commit();
 
             return redirect()->route('packages.index')
-                ->with('success', 'Paquete creado exitosamente.');
+                ->with('success', '¡Paquete creado exitosamente!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -99,7 +99,7 @@ class PackageController extends Controller
             DB::commit();
 
             return redirect()->route('packages.index')
-                ->with('success', 'Paquete actualizado exitosamente.');
+                ->with('success', '¡Paquete actualizado exitosamente!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -122,7 +122,7 @@ class PackageController extends Controller
             DB::commit();
 
             return redirect()->route('packages.index')
-                ->with('success', 'Paquete eliminado exitosamente.');
+                ->with('success', '¡Paquete eliminado exitosamente!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -145,15 +145,17 @@ class PackageController extends Controller
             DB::commit();
 
             $message = $request->is_active 
-                ? 'Paquete activado.' 
-                : 'Paquete desactivado.';
+                ? '¡Paquete activado exitosamente!' 
+                : '¡Paquete desactivado exitosamente!';
 
-            return back()->with('success', $message);
+            return back()
+                ->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Error: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al cambiar estado del paquete: ' . $e->getMessage());
         }
     }
 
@@ -200,7 +202,8 @@ class PackageController extends Controller
 
         // Verificar que el paquete esté activo
         if (!$package->is_active) {
-            return back()->with('error', 'Este paquete no está disponible actualmente.');
+            return back()
+                ->with('error', 'Este paquete no está disponible actualmente.');
         }
 
         DB::beginTransaction();
@@ -212,12 +215,13 @@ class PackageController extends Controller
             DB::commit();
 
             return redirect()->route('dashboard')
-                ->with('success', "¡Paquete {$package->name} contratado exitosamente!");
+                ->with('success', "¡Paquete {$package->name} contratado exitosamente! Ya puedes comenzar a crear órdenes.");
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Error al contratar el paquete: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al contratar el paquete: ' . $e->getMessage());
         }
     }
 }

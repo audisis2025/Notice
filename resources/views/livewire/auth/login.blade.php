@@ -7,17 +7,20 @@
  * Elaboró                      : Jesús Núñez
  * Fecha de liberación          : 09/01/2026
  * Autorizó                     : Jesús Núñez
- * Versión                      : 1.0
- * Fecha de mantenimiento       : 
+ * Versión                      : 3.0
+ * Fecha de mantenimiento       : 15/01/2026
  * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Uso exclusivo de helpers globales de SweetAlert2
+ * Responsable                  : Sistema
  * Revisor                      : 
  */
 --}}
 
 <x-layouts.auth>
+    {{-- Componente de mensajes flash --}}
+    <x-flash-messages />
+
     <style>
         .flex.h-9.w-9:has(svg),
         .flex.h-9.w-9:has(x-app-logo-icon),
@@ -36,7 +39,10 @@
     </style>
     
     <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Ingresar a tu cuenta')" :description="__('Ingresa tu correo electrónico y contraseña a continuación para iniciar sesión')" />
+        <x-auth-header 
+            :title="__('Ingresar a tu cuenta')" 
+            :description="__('Ingresa tu correo electrónico y contraseña a continuación para iniciar sesión')" 
+        />
 
         <x-auth-session-status class="text-center" :status="session('status')" />
 
@@ -68,7 +74,11 @@
                 />
 
                 @if (Route::has('password.request'))
-                    <flux:link class="absolute top-0 text-sm end-0 text-black hover:text-gray-700 dark:text-white dark:hover:text-gray-300" :href="route('password.request')" wire:navigate>
+                    <flux:link 
+                        class="absolute top-0 text-sm end-0 text-black hover:text-gray-700 dark:text-white dark:hover:text-gray-300" 
+                        :href="route('password.request')" 
+                        wire:navigate
+                    >
                         {{ __('¿Olvidaste tu contraseña?') }}
                     </flux:link>
                 @endif
@@ -93,7 +103,11 @@
         @if (Route::has('register'))
             <div class="space-x-1 text-sm text-center rtl:space-x-reverse text-black/60 dark:text-white/60">
                 <span>{{ __('¿No tienes una cuenta?') }}</span>
-                <flux:link :href="route('register')" wire:navigate class="text-black hover:text-gray-700 dark:text-white dark:hover:text-gray-300">
+                <flux:link 
+                    :href="route('register')" 
+                    wire:navigate 
+                    class="text-black hover:text-gray-700 dark:text-white dark:hover:text-gray-300"
+                >
                     {{ __('Regístrate') }}
                 </flux:link>
             </div>
@@ -101,13 +115,16 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('loginForm');
             
+            // ============================================
+            // VALIDACIÓN DEL FORMULARIO
+            // ============================================
             if (form) {
                 form.addEventListener('submit', function(e) {
+                    // Limpiar bordes de error previos
                     document.querySelectorAll('input').forEach(input => {
                         input.style.borderColor = '';
                     });
@@ -115,18 +132,14 @@
                     const email = document.getElementById('email').value.trim();
                     const password = document.getElementById('password').value;
                     
+                    // Validar campos vacíos
                     if (!email || !password) {
                         e.preventDefault();
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Campos incompletos',
-                            text: 'Por favor, completa todos los campos requeridos.',
-                            confirmButtonText: 'Aceptar',
-                            confirmButtonColor: '#dc2626'
-                        });
+                        showError('Por favor, completa todos los campos requeridos.', 'Campos incompletos');
                         return false;
                     }
                     
+                    // Validar formato de email
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                     if (!emailRegex.test(email)) {
                         e.preventDefault();
@@ -134,42 +147,39 @@
                         emailField.style.borderColor = '#dc2626';
                         emailField.style.borderWidth = '2px';
                         
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Correo inválido',
-                            text: 'Por favor, ingresa un correo electrónico válido.',
-                            confirmButtonText: 'Aceptar',
-                            confirmButtonColor: '#dc2626'
-                        });
+                        showError('Por favor, ingresa un correo electrónico válido.', 'Correo inválido');
                         emailField.focus();
                         return false;
                     }
                 });
             }
             
+            // ============================================
+            // CUENTA BLOQUEADA
+            // ============================================
             @if(session('error_cuenta_bloqueada'))
+                // Limpiar campos
                 const emailField = document.getElementById('email');
                 const passwordField = document.getElementById('password');
                 if (emailField) emailField.value = '';
                 if (passwordField) passwordField.value = '';
                 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Cuenta Bloqueada',
-                    text: 'Tu cuenta ha sido bloqueada por infringir las normas de uso de la plataforma.',
-                    confirmButtonText: 'Aceptar',
-                    confirmButtonColor: '#dc2626',
-                    allowOutsideClick: false,
-                    allowEscapeKey: true,
-                    backdrop: true
-                });
+                // ✅ USAR HELPER showError
+                showError('Tu cuenta ha sido bloqueada por infringir las normas de uso de la plataforma.', 'Cuenta Bloqueada');
             @endif
             
+            // ============================================
+            // ERRORES DE VALIDACIÓN DE LARAVEL
+            // ============================================
             @if ($errors->any())
-                const errores = @json($errors->all());
-                
                 @if(!session('error_cuenta_bloqueada'))
-                    const traducciones = {
+                    const errores = @json($errors->all());
+                    
+                    // Ya NO necesitamos traducciones porque Laravel YA envía en español
+                    // Los mensajes vienen directamente traducidos desde lang/es/
+                    
+                    // Si por alguna razón llega un mensaje en inglés, lo traducimos:
+                    const traduccionesRespaldo = {
                         'These credentials do not match our records.': 'Las credenciales no coinciden con nuestros registros.',
                         'The email field is required.': 'El campo correo electrónico es obligatorio.',
                         'The password field is required.': 'El campo contraseña es obligatorio.',
@@ -179,36 +189,36 @@
                         'Your email address is not verified.': 'Tu correo electrónico no ha sido verificado.'
                     };
                     
+                    // Usar el mensaje tal cual viene, o traducirlo si está en inglés
+                    const traducirMensaje = (msg) => traduccionesRespaldo[msg] || msg;
+                    
+                    // Un solo error - ✅ USAR HELPER showError
                     if (errores.length === 1) {
-                        const errorTraducido = traducciones[errores[0]] || errores[0];
-                        
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error al iniciar sesión',
-                            text: errorTraducido,
-                            confirmButtonText: 'Aceptar',
-                            confirmButtonColor: '#dc2626'
-                        });
-                    } else {
-                        let mensajeHtml = '<div style="text-align: center;">';
-                        mensajeHtml += '<ul style="margin: 0; padding-left: 0; list-style: none;">';
+                        const errorTraducido = traducirMensaje(errores[0]);
+                        showError(errorTraducido, 'Error al iniciar sesión');
+                    } 
+                    // Múltiples errores
+                    else {
+                        let mensajeHtml = '<div style="text-align: left; padding-left: 1rem;">';
+                        mensajeHtml += '<ul style="margin: 0; padding-left: 1.5rem;">';
                         
                         errores.forEach(function(error) {
-                            const errorTraducido = traducciones[error] || error;
+                            const errorTraducido = traducirMensaje(error);
                             mensajeHtml += '<li style="margin-bottom: 8px;">' + errorTraducido + '</li>';
                         });
                         
                         mensajeHtml += '</ul></div>';
                         
+                        // Múltiples errores requieren Swal.fire con HTML
                         Swal.fire({
                             icon: 'error',
                             title: 'Error al iniciar sesión',
                             html: mensajeHtml,
-                            confirmButtonText: 'Aceptar',
-                            confirmButtonColor: '#dc2626'
+                            confirmButtonText: 'Entendido'
                         });
                     }
 
+                    // Marcar campos con error
                     @foreach($errors->keys() as $field)
                         const field_{{ $field }} = document.getElementById('{{ $field }}');
                         if (field_{{ $field }}) {
@@ -217,56 +227,6 @@
                         }
                     @endforeach
                 @endif
-            @endif
-            
-            @if (session('success'))
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Inicio de sesión exitoso!',
-                    text: '{{ session("success") }}',
-                    confirmButtonText: 'Aceptar',
-                    confirmButtonColor: '#10b981'
-                });
-            @endif
-            
-            @if (session('error') && !session('error_cuenta_bloqueada'))
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: '{{ session("error") }}',
-                    confirmButtonText: 'Aceptar',
-                    confirmButtonColor: '#dc2626'
-                });
-            @endif
-            
-            @if (session('warning'))
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Advertencia',
-                    text: '{{ session("warning") }}',
-                    confirmButtonText: 'Aceptar',
-                    confirmButtonColor: '#f59e0b'
-                });
-            @endif
-            
-            @if (session('info'))
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Información',
-                    text: '{{ session("info") }}',
-                    confirmButtonText: 'Aceptar',
-                    confirmButtonColor: '#3b82f6'
-                });
-            @endif
-
-            @if (session('status'))
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Éxito!',
-                    text: '{{ session("status") }}',
-                    confirmButtonText: 'Aceptar',
-                    confirmButtonColor: '#10b981'
-                });
             @endif
         });
     </script>

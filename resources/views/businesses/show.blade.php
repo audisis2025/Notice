@@ -1,13 +1,12 @@
 <x-layouts.app.sidebar>
+    <x-flash-messages />
+
     @section('page-title', $business->business_name)
 
     <div class="max-w-6xl mx-auto">
         {{-- Botón regresar --}}
         <div class="flex justify-end mb-4">
-            <flux:button 
-                variant="ghost" 
-                href="{{ route('businesses.index') }}"
-            >
+            <flux:button variant="ghost" href="{{ route('businesses.index') }}">
                 <x-heroicon-o-arrow-left class="w-5 h-5 mr-2" />
                 Volver al listado
             </flux:button>
@@ -19,8 +18,9 @@
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden">
                     {{-- Header con logo --}}
                     <div class="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                        @if($business->logo)
-                            <img src="{{ Storage::url($business->logo) }}" alt="{{ $business->business_name }}" class="h-full w-full object-cover">
+                        @if ($business->logo)
+                            <img src="{{ Storage::url($business->logo) }}" alt="{{ $business->business_name }}"
+                                class="h-full w-full object-cover">
                         @else
                             <x-heroicon-o-building-storefront class="w-32 h-32 text-gray-400" />
                         @endif
@@ -30,7 +30,7 @@
                         <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ $business->business_name }}</h1>
                         <p class="text-lg text-gray-600 mb-6">{{ $business->legal_name }}</p>
 
-                        @if($business->description)
+                        @if ($business->description)
                             <p class="text-gray-700 mb-6">{{ $business->description }}</p>
                         @endif
 
@@ -43,16 +43,17 @@
                                         <x-heroicon-o-phone class="w-5 h-5 mr-2" />
                                         {{ $business->phone }}
                                     </div>
-                                    @if($business->email)
+                                    @if ($business->email)
                                         <div class="flex items-center text-gray-700">
                                             <x-heroicon-o-envelope class="w-5 h-5 mr-2" />
                                             {{ $business->email }}
                                         </div>
                                     @endif
-                                    @if($business->website)
+                                    @if ($business->website)
                                         <div class="flex items-center text-gray-700">
                                             <x-heroicon-o-globe-alt class="w-5 h-5 mr-2" />
-                                            <a href="{{ $business->website }}" target="_blank" class="text-blue-600 hover:underline">
+                                            <a href="{{ $business->website }}" target="_blank"
+                                                class="text-blue-600 hover:underline">
                                                 Sitio web
                                             </a>
                                         </div>
@@ -77,10 +78,11 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="flex items-center">
                                     <x-heroicon-o-clock class="w-5 h-5 text-gray-400 mr-2" />
-                                    <span class="text-gray-700">Período de entrega: {{ $business->delivery_period_minutes }} min</span>
+                                    <span class="text-gray-700">Período de entrega:
+                                        {{ $business->delivery_period_minutes }} min</span>
                                 </div>
                                 <div class="flex items-center">
-                                    @if($business->can_be_rated)
+                                    @if ($business->can_be_rated)
                                         <x-heroicon-o-check-circle class="w-5 h-5 text-green-500 mr-2" />
                                         <span class="text-gray-700">Calificaciones habilitadas</span>
                                     @else
@@ -103,11 +105,13 @@
                         </div>
                         <div class="bg-green-50 rounded-lg p-4">
                             <p class="text-sm text-green-700">Órdenes Completadas</p>
-                            <p class="text-3xl font-bold text-green-900">{{ $business->orders()->where('status', 'delivered')->count() }}</p>
+                            <p class="text-3xl font-bold text-green-900">
+                                {{ $business->orders()->where('status', 'delivered')->count() }}</p>
                         </div>
                         <div class="bg-yellow-50 rounded-lg p-4">
                             <p class="text-sm text-yellow-700">Calificación Promedio</p>
-                            <p class="text-3xl font-bold text-yellow-900">{{ number_format($business->averageRating(), 1) }}</p>
+                            <p class="text-3xl font-bold text-yellow-900">
+                                {{ number_format($business->averageRating(), 1) }}</p>
                         </div>
                     </div>
                 </div>
@@ -119,19 +123,15 @@
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold mb-4">Estado</h3>
                     <div class="space-y-3">
-                        @if($business->is_active)
+                        @if ($business->is_active)
                             <flux:badge variant="success" class="w-full justify-center">
                                 <x-heroicon-o-check-badge class="w-5 h-5 mr-2" />
                                 Negocio Activo
                             </flux:badge>
                             <form action="{{ route('businesses.suspend', $business) }}" method="POST">
                                 @csrf
-                                <flux:button 
-                                    type="submit"
-                                    variant="danger"
-                                    class="w-full"
-                                    onclick="return confirm('¿Suspender este negocio?')"
-                                >
+                                <flux:button type="submit" variant="danger" class="w-full"
+                                    onclick="return confirm('¿Suspender este negocio?')">
                                     <x-heroicon-o-pause-circle class="w-5 h-5 mr-2" />
                                     Suspender Negocio
                                 </flux:button>
@@ -143,11 +143,7 @@
                             </flux:badge>
                             <form action="{{ route('businesses.reactivate', $business) }}" method="POST">
                                 @csrf
-                                <flux:button 
-                                    type="submit"
-                                    variant="success"
-                                    class="w-full"
-                                >
+                                <flux:button type="submit" variant="success" class="w-full">
                                     <x-heroicon-o-check-circle class="w-5 h-5 mr-2" />
                                     Reactivar Negocio
                                 </flux:button>
@@ -159,7 +155,7 @@
                 {{-- Paquete actual --}}
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-lg font-semibold mb-4">Paquete Actual</h3>
-                    @if($business->hasActivePackage())
+                    @if ($business->hasActivePackage())
                         <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                             <p class="font-semibold text-green-900">{{ $business->activePackage->package->name }}</p>
                             <p class="text-sm text-green-700 mt-2">
@@ -185,12 +181,8 @@
                             <p class="text-sm text-gray-500">{{ $business->user->phone }}</p>
                         </div>
                     </div>
-                    <flux:button 
-                        variant="ghost"
-                        size="sm"
-                        href="{{ route('users.show', $business->user) }}"
-                        class="w-full mt-4"
-                    >
+                    <flux:button variant="ghost" size="sm" href="{{ route('users.show', $business->user) }}"
+                        class="w-full mt-4">
                         Ver perfil
                     </flux:button>
                 </div>

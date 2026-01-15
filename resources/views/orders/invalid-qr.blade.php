@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gradient-to-br from-yellow-50 to-orange-100 min-h-screen flex items-center justify-center p-4">
+    <x-flash-messages />
     <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
         <div class="inline-flex items-center justify-center w-20 h-20 bg-yellow-100 rounded-full mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 text-yellow-600">

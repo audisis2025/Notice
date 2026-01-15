@@ -17,6 +17,8 @@
  */
 --}}
 <x-layouts.app.sidebar>
+    <x-flash-messages />
+
     <div class="p-6">
         <div class="mb-6">
             <h1 class="text-3xl font-bold text-black dark:text-white">
@@ -29,15 +31,15 @@
 
         <div class="bg-white dark:bg-zinc-800 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700">
             <div class="p-6">
-                <form action="{{ route('business.store') }}" method="POST" enctype="multipart/form-data" 
-                    class="space-y-8" id="businessForm">
+                <form action="{{ route('business.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8"
+                    id="businessForm">
                     @csrf
 
                     {{-- Información General --}}
                     <div>
                         <h2 class="text-xl font-bold text-black dark:text-white mb-6 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                stroke="currentColor" class="w-6 h-6 mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
                             </svg>
@@ -51,8 +53,7 @@
                                     Nombre del Negocio <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="business_name" id="business_name"
-                                    value="{{ old('business_name') }}" required
-                                    placeholder="Ej: Lavandería Express"
+                                    value="{{ old('business_name') }}" required placeholder="Ej: Lavandería Express"
                                     class="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent @error('business_name') border-red-500 @enderror" />
                                 @error('business_name')
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -64,9 +65,8 @@
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Razón Social <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" name="legal_name" id="legal_name"
-                                    value="{{ old('legal_name') }}" required
-                                    placeholder="Ej: Lavandería Express S.A. de C.V."
+                                <input type="text" name="legal_name" id="legal_name" value="{{ old('legal_name') }}"
+                                    required placeholder="Ej: Lavandería Express S.A. de C.V."
                                     class="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent @error('legal_name') border-red-500 @enderror" />
                                 @error('legal_name')
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -78,8 +78,8 @@
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     RFC / Identificador Fiscal <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" name="tax_id" id="tax_id" value="{{ old('tax_id') }}"
-                                    required placeholder="Ej: LEX850614HF3"
+                                <input type="text" name="tax_id" id="tax_id" value="{{ old('tax_id') }}" required
+                                    placeholder="Ej: LEX850614HF3"
                                     class="w-full px-4 py-2 border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 focus:border-transparent @error('tax_id') border-red-500 @enderror" />
                                 @error('tax_id')
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -116,8 +116,8 @@
                     {{-- Información de Contacto --}}
                     <div class="border-t border-gray-200 dark:border-zinc-700 pt-8">
                         <h2 class="text-xl font-bold text-black dark:text-white mb-6 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                stroke="currentColor" class="w-6 h-6 mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
                             </svg>
@@ -169,8 +169,8 @@
                     {{-- Dirección --}}
                     <div class="border-t border-gray-200 dark:border-zinc-700 pt-8">
                         <h2 class="text-xl font-bold text-black dark:text-white mb-6 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                stroke="currentColor" class="w-6 h-6 mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -252,12 +252,13 @@
                     {{-- Ubicación GPS --}}
                     <div class="border-t border-gray-200 dark:border-zinc-700 pt-8">
                         <h2 class="text-xl font-bold text-black dark:text-white mb-6 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                stroke="currentColor" class="w-6 h-6 mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
                             </svg>
-                            {{ __('Ubicación GPS') }} <span class="text-sm font-normal text-gray-500 ml-2">(opcional)</span>
+                            {{ __('Ubicación GPS') }} <span
+                                class="text-sm font-normal text-gray-500 ml-2">(opcional)</span>
                         </h2>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -288,7 +289,8 @@
                             </div>
                         </div>
 
-                        <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 dark:border-blue-600 p-4 rounded mt-4">
+                        <div
+                            class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 dark:border-blue-600 p-4 rounded mt-4">
                             <div class="flex items-start">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke-width="1.5" stroke="currentColor"
@@ -306,11 +308,12 @@
                     {{-- Configuraciones --}}
                     <div class="border-t border-gray-200 dark:border-zinc-700 pt-8">
                         <h2 class="text-xl font-bold text-black dark:text-white mb-6 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                stroke="currentColor" class="w-6 h-6 mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="1.5" stroke="currentColor" class="w-6 h-6 mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                             {{ __('Configuraciones') }}
                         </h2>
@@ -329,7 +332,8 @@
                                 @enderror
                             </div>
 
-                            <div class="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-lg p-4">
+                            <div
+                                class="bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-lg p-4">
                                 <div class="flex items-center">
                                     <input type="hidden" name="can_be_rated" value="0">
                                     <input type="checkbox" name="can_be_rated" id="can_be_rated" value="1"
@@ -415,12 +419,16 @@
             }
 
             @keyframes shake {
-                0%, 100% {
+
+                0%,
+                100% {
                     transform: translateX(0);
                 }
+
                 25% {
                     transform: translateX(-5px);
                 }
+
                 75% {
                     transform: translateX(5px);
                 }

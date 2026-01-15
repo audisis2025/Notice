@@ -1,4 +1,5 @@
 <x-app-layout>
+    <x-flash-messages />
     @section('page-title', 'Orden ' . $order->order_number)
 
     <div class="max-w-5xl mx-auto">

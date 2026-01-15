@@ -1,56 +1,50 @@
-/**
- * Nombre del archivo           : app.js
- * Descripción del archivo      : Archivo principal de JavaScript que importa
- *                                y configura las librerías del sistema
- * Fecha de creación            : 09/01/2026
- * Elaboró                      : Jesús Núñez
- * Fecha de liberación          : 09/01/2026
- * Autorizó                     : Jesús Núñez
- * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
- */
-
 import './bootstrap';
-import './sweetalert-config';
-import Swal from 'sweetalert2';
+import './sweetalert-config'; // 👈 aquí se define window.Swal correctamente
 import Alpine from 'alpinejs';
 
-// Hacer disponibles globalmente
-window.Swal = Swal;
 window.Alpine = Alpine;
+Alpine.start();
 
-// Iniciar Alpine.js
-Alpine.start(); 
-
-// Listeners para eventos de Livewire
+// ============================================
+// LISTENERS PARA EVENTOS DE LIVEWIRE
+// ============================================
 document.addEventListener('livewire:init', () => {
-    // Éxito
+
     Livewire.on('success', (event) => {
         showSuccess(event.message);
     });
 
-    // Error
     Livewire.on('error', (event) => {
         showError(event.message);
     });
 
-    // Advertencia
     Livewire.on('warning', (event) => {
         showWarning(event.message);
     });
 
-    // Info
     Livewire.on('info', (event) => {
         showInfo(event.message);
     });
 
-    // Toast
     Livewire.on('toast', (event) => {
         showToast(event.message, event.type || 'success');
     });
 });
+
+// ============================================
+// FLASH MESSAGES BLADE
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+
+    const successMessage = document.querySelector('[data-flash-success]');
+    const errorMessage = document.querySelector('[data-flash-error]');
+    const warningMessage = document.querySelector('[data-flash-warning]');
+    const infoMessage = document.querySelector('[data-flash-info]');
+
+    if (successMessage) showToast(successMessage.dataset.flashSuccess, 'success');
+    if (errorMessage) showError(errorMessage.dataset.flashError);
+    if (warningMessage) showWarning(warningMessage.dataset.flashWarning);
+    if (infoMessage) showInfo(infoMessage.dataset.flashInfo);
+});
+
+console.log('✅ SweetAlert2 configurado en español correctamente');

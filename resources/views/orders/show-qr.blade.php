@@ -9,6 +9,7 @@
  */
 --}}
 <x-layouts.app.sidebar>
+    <x-flash-messages />
     <div class="min-h-screen flex items-center justify-center p-6 bg-gray-50 dark:bg-zinc-900">
         <div class="max-w-2xl w-full">
             {{-- Tarjeta principal --}}

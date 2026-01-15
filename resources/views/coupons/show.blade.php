@@ -1,4 +1,5 @@
 <x-layouts.app.sidebar>
+    <x-flash-messages />
     @section('page-title', 'Cupón ' . $coupon->code)
 
     <div class="max-w-4xl mx-auto">

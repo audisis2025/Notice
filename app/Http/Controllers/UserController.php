@@ -4,9 +4,10 @@
  * Nombre de la clase           : UserController
  * Descripción de la clase      : Controlador que gestiona las operaciones CRUD
  *                                de usuarios sin Services
- * Versión                      : 2.0
- * Fecha de mantenimiento       : 14/01/2026
+ * Versión                      : 2.1
+ * Fecha de mantenimiento       : 15/01/2026
  * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Mejora de mensajes SweetAlert sin modificar lógica
  */
 
 namespace App\Http\Controllers;
@@ -78,7 +79,7 @@ class UserController extends Controller
             DB::commit();
 
             return redirect()->route('users.index')
-                ->with('success', 'Usuario creado exitosamente.');
+                ->with('success', '¡Usuario creado exitosamente!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -117,7 +118,7 @@ class UserController extends Controller
             DB::commit();
 
             return redirect()->route('users.index')
-                ->with('success', 'Usuario actualizado exitosamente.');
+                ->with('success', '¡Usuario actualizado exitosamente!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -140,7 +141,7 @@ class UserController extends Controller
             DB::commit();
 
             return redirect()->route('users.index')
-                ->with('success', 'Usuario eliminado exitosamente.');
+                ->with('success', '¡Usuario eliminado exitosamente!');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -162,14 +163,18 @@ class UserController extends Controller
 
             DB::commit();
 
-            $message = $request->is_active ? 'Usuario activado.' : 'Usuario desactivado.';
+            $message = $request->is_active 
+                ? '¡Usuario activado exitosamente!' 
+                : '¡Usuario desactivado exitosamente!';
 
-            return back()->with('success', $message);
+            return back()
+                ->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
 
-            return back()->with('error', 'Error al cambiar estado: ' . $e->getMessage());
+            return back()
+                ->with('error', 'Error al cambiar estado del usuario: ' . $e->getMessage());
         }
     }
 }

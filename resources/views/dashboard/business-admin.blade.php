@@ -18,7 +18,7 @@
 --}}
 
 <x-layouts.app.sidebar :title="__('Dashboard')">
-
+    <x-flash-messages />
     @if(session('success'))
         <script>
             document.addEventListener('DOMContentLoaded', function() {

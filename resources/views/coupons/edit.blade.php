@@ -1,5 +1,6 @@
 
 <x-layouts.app.sidebar>
+    <x-flash-messages />
     @section('page-title', 'Editar Cupón')
 
     <div class="max-w-3xl mx-auto">

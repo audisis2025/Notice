@@ -1,4 +1,5 @@
 <x-app-layout>
+    <x-flash-messages />
     @section('page-title', 'Calificaciones de ' . $business->business_name)
 
     <div class="max-w-7xl mx-auto">

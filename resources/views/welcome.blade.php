@@ -205,19 +205,29 @@
         </div>
     </main>
 
-    <footer class="bg-black dark:bg-zinc-800 border-t border-zinc-200 dark:border-zinc-700 text-center py-6 mt-auto">
-        <flux:text variant="subtle" class="text-white dark:text-white/70 text-sm">
-            © {{ date('Y') }} SISNOTICE. Todos los derechos reservados.
-        </flux:text>
+<footer class="bg-black dark:bg-zinc-800 border-t border-zinc-200 dark:border-zinc-700 text-center py-6 mt-auto">
+    <flux:text variant="subtle" class="text-white dark:text-white/70 text-sm">
+        © {{ date('Y') }} SISNOTICE. Todos los derechos reservados.
+    </flux:text>
 
-        <p class="mt-2">
-            <flux:link href="#"
-                class="text-white hover:text-gray-200 text-sm underline-offset-4 hover:underline" target="_blank"
-                rel="noopener noreferrer">
-                Términos y Condiciones
-            </flux:link>
-        </p>
-    </footer>
+    <p class="mt-2 space-x-2">
+        <flux:link href="{{ route('terms') }}"
+            class="text-white hover:text-gray-200 text-sm underline-offset-4 hover:underline" 
+            target="_blank"
+            rel="noopener noreferrer">
+            Términos y Condiciones
+        </flux:link>
+        
+        <span class="text-white">•</span>
+        
+        <flux:link href="{{ route('privacy') }}"
+            class="text-white hover:text-gray-200 text-sm underline-offset-4 hover:underline" 
+            target="_blank"
+            rel="noopener noreferrer">
+            Política de Privacidad
+        </flux:link>
+    </p>
+</footer>
 </body>
 
 </html>

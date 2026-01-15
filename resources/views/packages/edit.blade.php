@@ -1,4 +1,5 @@
 <x-app-layout>
+    <x-flash-messages />
     @section('page-title', 'Editar Paquete')
 
     <div class="max-w-3xl mx-auto">

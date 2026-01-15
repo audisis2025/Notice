@@ -9,6 +9,7 @@
  */
 --}}
 <x-layouts.app.sidebar>
+    <x-flash-messages />
     <div class="p-6">
         {{-- Encabezado --}}
         <div class="mb-6 flex justify-between items-center">

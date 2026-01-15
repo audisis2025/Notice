@@ -18,6 +18,7 @@
 --}}
 
 <x-layouts.app.sidebar>
+    <x-flash-messages />
     {{-- Contenido principal --}}
     <div class="p-6">
         {{-- Encabezado y botón crear --}}
