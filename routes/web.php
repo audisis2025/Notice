@@ -21,6 +21,17 @@ Route::get('/', function () {
     return view('welcome', compact('packages'));
 })->name('home');
 
+// En routes/web.php después de la ruta dashboard
+Route::get('/select-package', function () {
+    $packages = \App\Models\Package::where('is_active', true)
+        ->orderBy('price')
+        ->get();
+    $business = auth()->user()->business;
+    $currentPackage = $business?->activePackage;
+
+    return view('dashboard.select-package', compact('packages', 'currentPackage'));
+})->middleware('auth')->name('select.package');
+
 // Rutas protegidas por autenticación
 Route::middleware(['auth'])->group(function () {
 
@@ -46,8 +57,6 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('coupons', CouponController::class);
         Route::post('coupons/validate', [CouponController::class, 'validate'])
             ->name('coupons.validate');
-        Route::post('coupons/{coupon}/toggle-status', [CouponController::class, 'toggleStatus'])
-            ->name('coupons.toggle-status');
 
         // Gestión de Negocios (Solo ver)
         Route::get('businesses', [BusinessController::class, 'index'])->name('businesses.index');
@@ -66,7 +75,7 @@ Route::middleware(['auth'])->group(function () {
         // ✅ REGISTRO DE NEGOCIO (PRIMER ACCESO)
         Route::get('business/create', [BusinessController::class, 'create'])->name('business.create');
         Route::post('business', [BusinessController::class, 'store'])->name('business.store');
-        
+
         // Edición del negocio
         Route::get('business/edit', [BusinessController::class, 'edit'])->name('business.edit');
         Route::put('business', [BusinessController::class, 'update'])->name('business.update');
@@ -76,8 +85,13 @@ Route::middleware(['auth'])->group(function () {
             ->name('business.update-delivery-period');
 
         // ✅ PAQUETES DISPONIBLES (DESPUÉS DE TENER NEGOCIO)
+        // ⚠️ ESTAS RUTAS ESTABAN MAL - CORREGIDAS AQUÍ
         Route::get('packages/available', [PackageController::class, 'available'])->name('packages.available');
         Route::post('packages/{package}/subscribe', [PackageController::class, 'subscribe'])->name('packages.subscribe');
+
+        // Historial de paquetes contratados
+        Route::get('business-packages/history', [BusinessPackageController::class, 'history'])
+            ->name('business-packages.history');
 
         // Órdenes (requiere paquete activo y negocio activo)
         Route::middleware(['package.active', 'business.active'])->group(function () {
@@ -90,8 +104,6 @@ Route::middleware(['auth'])->group(function () {
                 ->name('orders.cancel');
             Route::post('orders/{order}/schedule-reminders', [OrderController::class, 'scheduleReminders'])
                 ->name('orders.schedule-reminders');
-            Route::get('orders/{order}/download-qr/{type}', [OrderController::class, 'downloadQR'])
-                ->name('orders.download-qr');
         });
 
         // Calificaciones del negocio

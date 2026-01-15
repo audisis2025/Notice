@@ -2,19 +2,20 @@
 
 /**
  * Nombre de la clase           : Order
- * Descripción de la clase      : Modelo Eloquent que representa una orden creada por
- *                                un negocio para gestionar servicios o productos
+ * Descripción de la clase      : Modelo Eloquent que representa una orden con
+ *                                su lógica de negocio y gestión de estados
  * Fecha de creación            : 09/01/2026
  * Elaboró                      : Jesús Núñez
- * Fecha de liberación          : 09/01/2026
+ * Fecha de liberación          : 14/01/2026
  * Autorizó                     : Jesús Núñez
- * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
+ * Versión                      : 3.0
+ * Fecha de mantenimiento       : 14/01/2026
+ * Folio de mantenimiento       : 2
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Simplificación - Solo order_number requerido
+ *                                description y amount son opcionales
+ * Responsable                  : Jesús Núñez
+ * Revisor                      : Jesús Núñez
  */
 
 namespace App\Models;
@@ -22,29 +23,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Carbon\Carbon;
 
-/**
- * Modelo Order
- * 
- * Representa una orden creada por un negocio para un servicio o producto.
- *
- * @property int $id
- * @property string $order_number
- * @property int $business_id
- * @property int|null $user_id
- * @property string $description
- * @property float $amount
- * @property string $status
- */
 class Order extends Model
 {
     use HasFactory, SoftDeletes;
 
     /**
      * Los atributos que son asignables en masa.
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
         'order_number',
@@ -66,8 +54,6 @@ class Order extends Model
 
     /**
      * Los atributos que deben ser convertidos.
-     *
-     * @var array<string, string>
      */
     protected $casts = [
         'amount' => 'decimal:2',
@@ -81,8 +67,6 @@ class Order extends Model
 
     /**
      * Relación: Una orden pertenece a un negocio.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function business()
     {
@@ -91,8 +75,6 @@ class Order extends Model
 
     /**
      * Relación: Una orden puede pertenecer a un usuario.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function user()
     {
@@ -101,8 +83,6 @@ class Order extends Model
 
     /**
      * Relación: Una orden puede tener muchos recordatorios.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function reminders()
     {
@@ -111,8 +91,6 @@ class Order extends Model
 
     /**
      * Relación: Una orden puede tener una calificación.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function rating()
     {
@@ -121,8 +99,6 @@ class Order extends Model
 
     /**
      * Relación: Una orden puede tener un chat.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function chat()
     {
@@ -130,9 +106,31 @@ class Order extends Model
     }
 
     /**
+     * Relación: Una orden puede tener muchos códigos QR.
+     */
+    public function qrCodes()
+    {
+        return $this->hasMany(OrderQRCode::class);
+    }
+
+    /**
+     * Relación: Código QR de asociación.
+     */
+    public function associationQR()
+    {
+        return $this->hasOne(OrderQRCode::class)->where('type', 'association');
+    }
+
+    /**
+     * Relación: Código QR de entrega.
+     */
+    public function deliveryQR()
+    {
+        return $this->hasOne(OrderQRCode::class)->where('type', 'delivery')->latest();
+    }
+
+    /**
      * Verifica si la orden está asociada a un usuario.
-     *
-     * @return bool
      */
     public function isAssociated(): bool
     {
@@ -141,8 +139,6 @@ class Order extends Model
 
     /**
      * Verifica si la orden puede ser entregada.
-     *
-     * @return bool
      */
     public function canBeDelivered(): bool
     {
@@ -151,8 +147,6 @@ class Order extends Model
 
     /**
      * Verifica si se ha excedido el período de entrega.
-     *
-     * @return bool
      */
     public function isDelayedDelivery(): bool
     {
@@ -169,10 +163,6 @@ class Order extends Model
 
     /**
      * Scope: Filtra órdenes por estado.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $status
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeByStatus($query, string $status)
     {
@@ -181,9 +171,6 @@ class Order extends Model
 
     /**
      * Scope: Filtra órdenes listas.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeReady($query)
     {
@@ -192,9 +179,6 @@ class Order extends Model
 
     /**
      * Scope: Filtra órdenes con retraso en entrega.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeDelayed($query)
     {
@@ -207,18 +191,178 @@ class Order extends Model
             });
     }
 
-    public function qrCodes(): HasMany
+    // ====================================================================
+    // MÉTODOS DE LÓGICA DE NEGOCIO (Anteriormente en OrderService)
+    // ====================================================================
+
+    /**
+     * Crea una nueva orden SOLO con número de orden.
+     * Description y amount son opcionales.
+     *
+     * @param Business $business
+     * @param array $data
+     * @return Order
+     */
+    public static function createOrder(Business $business, array $data): Order
     {
-        return $this->hasMany(OrderQRCode::class);
+        return self::create([
+            'order_number' => $data['order_number'], // ✅ Ahora manual
+            'business_id' => $business->id,
+            'description' => $data['description'] ?? null, // ✅ Opcional
+            'amount' => $data['amount'] ?? null, // ✅ Opcional
+            'status' => 'pending',
+        ]);
     }
 
-    public function associationQR(): HasOne
+    /**
+     * Marca la orden como pagada y genera QR de asociación.
+     *
+     * @return bool
+     */
+    public function markAsPaid(): bool
     {
-        return $this->hasOne(OrderQRCode::class)->where('type', 'association');
+        // Generar código QR para asociar orden
+        $qrCode = $this->generateQRCode('association');
+
+        return $this->update([
+            'status' => 'paid',
+            'paid_at' => now(),
+            'qr_code' => $qrCode,
+        ]);
     }
 
-    public function deliveryQR(): HasOne
+    /**
+     * Marca la orden como lista y genera QR de entrega.
+     *
+     * @return bool
+     */
+    public function markAsReady(): bool
     {
-        return $this->hasOne(OrderQRCode::class)->where('type', 'delivery')->latest();
+        // Generar QR para confirmación de entrega
+        $qrDeliveryCode = $this->generateQRCode('delivery');
+
+        $result = $this->update([
+            'status' => 'ready',
+            'ready_at' => now(),
+            'qr_delivery_code' => $qrDeliveryCode,
+        ]);
+
+        // Notificar al usuario si está asociado
+        if ($this->user) {
+            $this->user->notify(new \App\Notifications\OrderReadyNotification($this));
+        }
+
+        return $result;
+    }
+
+    /**
+     * Asocia la orden con un usuario mediante escaneo de QR.
+     *
+     * @param User $user
+     * @return bool
+     */
+    public function associateWithUser(User $user): bool
+    {
+        return $this->update([
+            'user_id' => $user->id,
+            'associated_at' => now(),
+        ]);
+    }
+
+    /**
+     * Confirma la entrega de la orden.
+     *
+     * @param User $user
+     * @return bool
+     * @throws \Exception
+     */
+    public function confirmDelivery(User $user): bool
+    {
+        // Verificar que el usuario sea el dueño de la orden
+        if ($this->user_id !== $user->id) {
+            throw new \Exception('Solo el usuario asociado puede confirmar la entrega.');
+        }
+
+        // Verificar que la orden esté lista
+        if ($this->status !== 'ready') {
+            throw new \Exception('La orden no está lista para entrega.');
+        }
+
+        return $this->update([
+            'status' => 'delivered',
+            'delivered_at' => now(),
+        ]);
+    }
+
+    /**
+     * Cancela la orden.
+     *
+     * @param string $reason
+     * @return bool
+     */
+    public function cancelOrder(string $reason): bool
+    {
+        $result = $this->update([
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+            'cancellation_reason' => $reason,
+        ]);
+
+        // Notificar al usuario si está asociado
+        if ($this->user) {
+            $this->user->notify(new \App\Notifications\OrderCancelledNotification($this));
+        }
+
+        return $result;
+    }
+
+    /**
+     * Genera un código QR para la orden.
+     *
+     * @param string $type (association o delivery)
+     * @return string Path del archivo QR
+     */
+    protected function generateQRCode(string $type): string
+    {
+        $data = json_encode([
+            'order_id' => $this->id,
+            'order_number' => $this->order_number,
+            'type' => $type,
+            'business_id' => $this->business_id,
+        ]);
+
+        $qrCode = QrCode::format('png')
+            ->size(300)
+            ->generate($data);
+
+        $filename = "{$this->order_number}_{$type}_" . time() . '.png';
+        $path = "qrcodes/{$filename}";
+
+        Storage::disk('public')->put($path, $qrCode);
+
+        return $path;
+    }
+
+    /**
+     * Verifica órdenes con retraso y habilita chat.
+     */
+    public static function checkAndEnableDelayedChats(): void
+    {
+        $delayedOrders = self::ready()
+            ->whereNotNull('ready_at')
+            ->where('chat_enabled', false)
+            ->get()
+            ->filter(function ($order) {
+                return $order->isDelayedDelivery();
+            });
+
+        foreach ($delayedOrders as $order) {
+            $order->update(['chat_enabled' => true]);
+
+            // Notificar al usuario que puede abrir chat
+            if ($order->user) {
+                $order->user->notify(new \App\Notifications\ChatEnabledNotification($order));
+            }
+        }
     }
 }

@@ -2,19 +2,12 @@
 
 /**
  * Nombre de la clase           : BusinessPackage
- * Descripción de la clase      : Modelo Eloquent que representa la contratación de un
- *                                paquete por parte de un negocio
- * Fecha de creación            : 09/01/2026
- * Elaboró                      : Jesús Núñez
- * Fecha de liberación          : 09/01/2026
- * Autorizó                     : Jesús Núñez
- * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
+ * Descripción de la clase      : Modelo Eloquent que representa la contratación
+ *                                de un paquete con lógica de negocio integrada
+ * Versión                      : 2.0
+ * Fecha de mantenimiento       : 14/01/2026
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Eliminación de Services - Lógica movida al modelo
  */
 
 namespace App\Models;
@@ -24,24 +17,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 
-/**
- * Modelo BusinessPackage
- * * @property int $id
- * @property int $business_id
- * @property int $package_id
- * @property \Illuminate\Support\Carbon $start_date  // <--- CAMBIAR A CARBON
- * @property \Illuminate\Support\Carbon $end_date    // <--- CAMBIAR A CARBON
- * @property float $price_paid
- * @property string $status
- */
 class BusinessPackage extends Model
 {
     use HasFactory, SoftDeletes;
 
     /**
      * Los atributos que son asignables en masa.
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
         'business_id',
@@ -57,8 +38,6 @@ class BusinessPackage extends Model
 
     /**
      * Los atributos que deben ser convertidos.
-     *
-     * @var array<string, string>
      */
     protected $casts = [
         'start_date' => 'date',
@@ -70,8 +49,6 @@ class BusinessPackage extends Model
 
     /**
      * Relación: Una suscripción pertenece a un negocio.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function business()
     {
@@ -80,8 +57,6 @@ class BusinessPackage extends Model
 
     /**
      * Relación: Una suscripción pertenece a un paquete.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function package()
     {
@@ -90,8 +65,6 @@ class BusinessPackage extends Model
 
     /**
      * Relación: Una suscripción puede tener un cupón asociado.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function coupon()
     {
@@ -100,8 +73,6 @@ class BusinessPackage extends Model
 
     /**
      * Relación: Una suscripción puede tener un pago.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function payment()
     {
@@ -113,7 +84,6 @@ class BusinessPackage extends Model
      */
     public function isActive(): bool
     {
-        // $this->end_date YA ES un objeto Carbon gracias al cast
         return $this->status === 'active' && $this->end_date->isFuture();
     }
 
@@ -122,16 +92,12 @@ class BusinessPackage extends Model
      */
     public function isNearExpiration(int $days = 7): bool
     {
-        // Mucho más directo:
         $daysUntilExpiration = now()->diffInDays($this->end_date, false);
         return $daysUntilExpiration > 0 && $daysUntilExpiration <= $days;
     }
 
     /**
      * Scope: Filtra suscripciones activas.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeActive($query)
     {
@@ -141,15 +107,102 @@ class BusinessPackage extends Model
 
     /**
      * Scope: Filtra suscripciones próximas a vencer.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param int $days
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeNearExpiration($query, int $days = 7)
     {
         return $query->where('status', 'active')
             ->whereBetween('end_date', [now(), now()->addDays($days)])
             ->where('notification_sent', false);
+    }
+
+    // ====================================================================
+    // MÉTODOS DE LÓGICA DE NEGOCIO (Anteriormente en BusinessPackageService)
+    // ====================================================================
+
+    /**
+     * Contrata un paquete para un negocio.
+     *
+     * @param Business $business
+     * @param Package $package
+     * @param array $paymentData
+     * @param string|null $couponCode
+     * @return BusinessPackage
+     */
+    public static function contractPackage(
+        Business $business,
+        Package $package,
+        array $paymentData,
+        ?string $couponCode = null
+    ): BusinessPackage {
+        $price = $package->price;
+        $discount = 0;
+        $coupon = null;
+
+        // Aplicar cupón si existe
+        if ($couponCode) {
+            $coupon = Coupon::where('code', $couponCode)->first();
+
+            if ($coupon && $coupon->isAvailable()) {
+                $discount = $coupon->calculateDiscount($price);
+                $price -= $discount;
+
+                // Marcar cupón como usado
+                $coupon->update([
+                    'is_used' => true,
+                    'used_by_business_id' => $business->id,
+                    'used_at' => now(),
+                ]);
+            }
+        }
+
+        // Crear suscripción
+        $startDate = Carbon::now();
+        $endDate = $startDate->copy()->addDays($package->duration_days);
+
+        $businessPackage = self::create([
+            'business_id' => $business->id,
+            'package_id' => $package->id,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'price_paid' => $price,
+            'discount_applied' => $discount,
+            'coupon_id' => $coupon ? $coupon->id : null,
+            'status' => 'active',
+        ]);
+
+        // Procesar pago (simulado)
+        Payment::processPayment($business, $businessPackage, $paymentData, $price);
+
+        return $businessPackage;
+    }
+
+    /**
+     * Verifica y notifica paquetes próximos a vencer.
+     *
+     * @param int $days
+     */
+    public static function checkExpiringPackages(int $days = 7): void
+    {
+        $expiringPackages = self::nearExpiration($days)->get();
+
+        foreach ($expiringPackages as $businessPackage) {
+            // Enviar notificación al negocio
+            $businessPackage->business->user->notify(
+                new \App\Notifications\PackageExpiringNotification($businessPackage)
+            );
+
+            // Marcar como notificado
+            $businessPackage->update(['notification_sent' => true]);
+        }
+    }
+
+    /**
+     * Cancela la suscripción.
+     *
+     * @return bool
+     */
+    public function cancelPackage(): bool
+    {
+        return $this->update(['status' => 'cancelled']);
     }
 }

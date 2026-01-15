@@ -1,11 +1,24 @@
 <?php
 
+/**
+ * Nombre de la clase           : User
+ * Descripción de la clase      : Modelo Eloquent que representa un usuario
+ *                                con lógica de negocio integrada
+ * Fecha de creación            : 09/01/2026
+ * Elaboró                      : Jesús Núñez
+ * Versión                      : 2.0
+ * Fecha de mantenimiento       : 14/01/2026
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Eliminación de Services - Lógica movida al modelo
+ */
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
@@ -13,8 +26,6 @@ class User extends Authenticatable
 
     /**
      * Los atributos que son asignables en masa.
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
         'name',
@@ -28,8 +39,6 @@ class User extends Authenticatable
 
     /**
      * Los atributos que deben ocultarse para serialización.
-     *
-     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -38,8 +47,6 @@ class User extends Authenticatable
 
     /**
      * Los atributos que deben ser convertidos.
-     *
-     * @var array<string, string>
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
@@ -50,8 +57,6 @@ class User extends Authenticatable
 
     /**
      * Relación: Un usuario puede tener un negocio (BusinessAdministrator).
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function business()
     {
@@ -60,8 +65,6 @@ class User extends Authenticatable
 
     /**
      * Relación: Un usuario móvil puede tener muchas órdenes.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function orders()
     {
@@ -70,8 +73,6 @@ class User extends Authenticatable
 
     /**
      * Relación: Un usuario móvil puede tener muchas calificaciones.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function ratings()
     {
@@ -80,8 +81,6 @@ class User extends Authenticatable
 
     /**
      * Relación: Un usuario móvil puede tener muchos tokens de dispositivo.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function deviceTokens()
     {
@@ -90,8 +89,6 @@ class User extends Authenticatable
 
     /**
      * Relación: Un usuario puede tener muchos chats.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function chats()
     {
@@ -100,8 +97,6 @@ class User extends Authenticatable
 
     /**
      * Relación: Un usuario puede enviar muchos mensajes.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function messages()
     {
@@ -110,8 +105,6 @@ class User extends Authenticatable
 
     /**
      * Verifica si el usuario es SuperAdministrador.
-     *
-     * @return bool
      */
     public function isSuperAdministrator(): bool
     {
@@ -120,8 +113,6 @@ class User extends Authenticatable
 
     /**
      * Verifica si el usuario es Administrador de Negocio.
-     *
-     * @return bool
      */
     public function isBusinessAdministrator(): bool
     {
@@ -130,8 +121,6 @@ class User extends Authenticatable
 
     /**
      * Verifica si el usuario es Usuario Móvil.
-     *
-     * @return bool
      */
     public function isMobileUser(): bool
     {
@@ -140,9 +129,6 @@ class User extends Authenticatable
 
     /**
      * Scope: Filtra usuarios activos.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeActive($query)
     {
@@ -151,30 +137,78 @@ class User extends Authenticatable
 
     /**
      * Scope: Filtra usuarios por rol.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $role
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeByRole($query, string $role)
     {
         return $query->where('role', $role);
     }
+
     /**
-     * Obtener las iniciales del usuario
-     * 
-     * @return string
+     * Obtener las iniciales del usuario.
      */
     public function initials(): string
     {
         $words = explode(' ', trim($this->name));
 
         if (count($words) >= 2) {
-            // Si tiene dos o más palabras, toma la primera letra de las primeras dos
             return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1));
         }
 
-        // Si solo tiene una palabra, toma las primeras dos letras
         return strtoupper(substr($this->name, 0, 2));
+    }
+
+    // ====================================================================
+    // MÉTODOS DE LÓGICA DE NEGOCIO (Anteriormente en UserService)
+    // ====================================================================
+
+    /**
+     * Crea un nuevo usuario en el sistema.
+     *
+     * @param array $data
+     * @return User
+     */
+    public static function createUser(array $data): User
+    {
+        $data['password'] = Hash::make($data['password']);
+        return self::create($data);
+    }
+
+    /**
+     * Actualiza el usuario.
+     *
+     * @param array $data
+     * @return bool
+     */
+    public function updateUser(array $data): bool
+    {
+        if (isset($data['password']) && !empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
+        }
+
+        return $this->update($data);
+    }
+
+    /**
+     * Activa o desactiva el usuario.
+     *
+     * @param bool $isActive
+     * @return bool
+     */
+    public function toggleStatus(bool $isActive): bool
+    {
+        return $this->update(['is_active' => $isActive]);
+    }
+
+    /**
+     * Obtiene usuarios por rol (estático).
+     *
+     * @param string $role
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function getUsersByRole(string $role)
+    {
+        return self::byRole($role)->active()->get();
     }
 }

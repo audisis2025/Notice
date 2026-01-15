@@ -2,24 +2,17 @@
 
 /**
  * Nombre de la clase           : DashboardController
- * Descripción de la clase      : Controlador que gestiona la lógica del dashboard
- *                                redirigiendo según el rol del usuario autenticado
- * Fecha de creación            : 09/01/2026
- * Elaboró                      : Jesús Núñez
- * Fecha de liberación          : 09/01/2026
- * Autorizó                     : Jesús Núñez
- * Versión                      : 1.0
- * Fecha de mantenimiento       : 13/01/2026
- * Folio de mantenimiento       : 3
+ * Descripción de la clase      : Controlador que gestiona dashboards sin Services
+ * Versión                      : 2.0
+ * Fecha de mantenimiento       : 14/01/2026
  * Tipo de mantenimiento        : Perfectivo
- * Descripción del mantenimiento: Se agregó método superAdminDashboard() faltante
- * Responsable                  : Jesús Núñez
- * Revisor                      : Jesús Núñez
  */
 
 namespace App\Http\Controllers;
 
-use App\Services\ReportService;
+use App\Models\Business;
+use App\Models\Order;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -33,26 +26,7 @@ use Illuminate\Support\Facades\Auth;
 class DashboardController extends Controller
 {
     /**
-     * Instancia del servicio de reportes.
-     *
-     * @var ReportService
-     */
-    protected ReportService $reportService;
-
-    /**
-     * Constructor del controlador.
-     *
-     * @param ReportService $reportService
-     */
-    public function __construct(ReportService $reportService)
-    {
-        $this->reportService = $reportService;
-    }
-
-    /**
      * Muestra el dashboard según el rol del usuario autenticado.
-     *
-     * @return \Illuminate\View\View
      */
     public function index()
     {
@@ -70,12 +44,22 @@ class DashboardController extends Controller
 
     /**
      * Dashboard para SuperAdministrador.
-     *
-     * @return \Illuminate\View\View
      */
     protected function superAdminDashboard()
     {
-        $statistics = $this->reportService->generateGlobalStatistics();
+        // Generar estadísticas globales directamente
+        $statistics = [
+            'total_businesses' => Business::count(),
+            'active_businesses' => Business::active()->count(),
+            'total_orders' => Order::count(),
+            'total_revenue' => Order::sum('amount'),
+            'orders_this_month' => Order::whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count(),
+            'revenue_this_month' => Order::whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('amount'),
+        ];
 
         return view('dashboard.super-admin', [
             'statistics' => $statistics,
@@ -84,8 +68,6 @@ class DashboardController extends Controller
 
     /**
      * Dashboard para Administrador de Negocio.
-     *
-     * @return \Illuminate\View\View
      */
     protected function businessAdminDashboard()
     {
@@ -124,10 +106,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Obtener órdenes por estado
-     *
-     * @param \App\Models\Business $business
-     * @return array
+     * Obtener órdenes por estado.
      */
     private function getOrdersByStatus($business)
     {
@@ -141,10 +120,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Obtener órdenes por mes
-     *
-     * @param \App\Models\Business $business
-     * @return array
+     * Obtener órdenes por mes.
      */
     private function getOrdersByMonth($business)
     {
@@ -165,10 +141,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Obtener ingresos por mes
-     *
-     * @param \App\Models\Business $business
-     * @return array
+     * Obtener ingresos por mes.
      */
     private function getRevenueByMonth($business)
     {
@@ -176,8 +149,6 @@ class DashboardController extends Controller
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
             
-            // Sumar el monto de las órdenes entregadas (delivered)
-            // porque son las que generan ingresos reales
             $revenue = $business->orders()
                 ->whereYear('created_at', $date->year)
                 ->whereMonth('created_at', $date->month)

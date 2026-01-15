@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * Nombre de la clase           : AppServiceProvider
+ * Descripción de la clase      : Proveedor de servicios principal sin inyección de Services
+ * Versión                      : 2.0
+ * Fecha de mantenimiento       : 14/01/2026
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Eliminación de Services
+ */
+
 namespace App\Providers;
 
 use App\Models\User;
@@ -13,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // No se registran Services
     }
 
     /**

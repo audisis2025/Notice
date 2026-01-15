@@ -1,47 +1,29 @@
 <?php
+
 /**
  * Nombre de la clase           : Coupon
  * Descripción de la clase      : Modelo Eloquent que representa un cupón de descuento
- *                                para la contratación de paquetes
- * Fecha de creación            : 09/01/2026
- * Elaboró                      : Jesús Núñez
- * Fecha de liberación          : 09/01/2026
- * Autorizó                     : Jesús Núñez
- * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
+ *                                con lógica de negocio integrada
+ * Versión                      : 2.0
+ * Fecha de mantenimiento       : 14/01/2026
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Eliminación de Services - Lógica movida al modelo
  */
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
-/**
- * Modelo Coupon
- * 
- * Representa un cupón de descuento generado por el SuperAdministrador.
- *
- * @property int $id
- * @property string $code
- * @property float $discount_percentage
- * @property string $expiration_date
- * @property bool $is_used
- * @property bool $is_active
- */
 class Coupon extends Model
 {
     use HasFactory, SoftDeletes;
 
     /**
      * Los atributos que son asignables en masa.
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
         'code',
@@ -55,8 +37,6 @@ class Coupon extends Model
 
     /**
      * Los atributos que deben ser convertidos.
-     *
-     * @var array<string, string>
      */
     protected $casts = [
         'discount_percentage' => 'decimal:2',
@@ -68,8 +48,6 @@ class Coupon extends Model
 
     /**
      * Relación: Un cupón puede ser usado por un negocio.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function business()
     {
@@ -78,8 +56,6 @@ class Coupon extends Model
 
     /**
      * Relación: Un cupón puede estar en muchas suscripciones.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function businessPackages()
     {
@@ -88,20 +64,16 @@ class Coupon extends Model
 
     /**
      * Verifica si el cupón está disponible para uso.
-     *
-     * @return bool
      */
     public function isAvailable(): bool
     {
-        return $this->is_active && 
-               !$this->is_used && 
+        return $this->is_active &&
+               !$this->is_used &&
                Carbon::parse($this->expiration_date)->isFuture();
     }
 
     /**
      * Verifica si el cupón está vencido.
-     *
-     * @return bool
      */
     public function isExpired(): bool
     {
@@ -110,9 +82,6 @@ class Coupon extends Model
 
     /**
      * Calcula el monto de descuento para un precio dado.
-     *
-     * @param float $price
-     * @return float
      */
     public function calculateDiscount(float $price): float
     {
@@ -121,14 +90,98 @@ class Coupon extends Model
 
     /**
      * Scope: Filtra cupones disponibles.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeAvailable($query)
     {
         return $query->where('is_active', true)
             ->where('is_used', false)
             ->where('expiration_date', '>=', now());
+    }
+
+    // ====================================================================
+    // MÉTODOS DE LÓGICA DE NEGOCIO (Anteriormente en CouponService)
+    // ====================================================================
+
+    /**
+     * Genera un nuevo cupón.
+     *
+     * @param array $data
+     * @return Coupon
+     */
+    public static function generateCoupon(array $data): Coupon
+    {
+        // Si no se proporciona código, generar uno automáticamente
+        if (!isset($data['code']) || empty($data['code'])) {
+            $data['code'] = self::generateUniqueCode();
+        }
+
+        return self::create($data);
+    }
+
+    /**
+     * Genera un código único para un cupón.
+     *
+     * @param int $length
+     * @return string
+     */
+    protected static function generateUniqueCode(int $length = 8): string
+    {
+        do {
+            $code = strtoupper(Str::random($length));
+        } while (self::where('code', $code)->exists());
+
+        return $code;
+    }
+
+    /**
+     * Valida un cupón por su código.
+     *
+     * @param string $code
+     * @return Coupon
+     * @throws \Exception
+     */
+    public static function validateCoupon(string $code): Coupon
+    {
+        $coupon = self::where('code', $code)->first();
+
+        if (!$coupon) {
+            throw new \Exception('El cupón no existe.');
+        }
+
+        if (!$coupon->is_active) {
+            throw new \Exception('El cupón está inactivo.');
+        }
+
+        if ($coupon->is_used) {
+            throw new \Exception('El cupón ya ha sido utilizado.');
+        }
+
+        if ($coupon->isExpired()) {
+            throw new \Exception('El cupón ha expirado.');
+        }
+
+        return $coupon;
+    }
+
+    /**
+     * Actualiza el cupón.
+     *
+     * @param array $data
+     * @return bool
+     */
+    public function updateCoupon(array $data): bool
+    {
+        return $this->update($data);
+    }
+
+    /**
+     * Activa o desactiva el cupón.
+     *
+     * @param bool $isActive
+     * @return bool
+     */
+    public function toggleStatus(bool $isActive): bool
+    {
+        return $this->update(['is_active' => $isActive]);
     }
 }

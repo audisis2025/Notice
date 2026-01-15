@@ -1,49 +1,34 @@
 <?php
+
 /**
  * Nombre de la clase           : Package
  * Descripción de la clase      : Modelo Eloquent que representa un paquete comercial
- *                                del sistema con sus características y precios
+ *                                con lógica de negocio integrada
  * Fecha de creación            : 09/01/2026
  * Elaboró                      : Jesús Núñez
  * Fecha de liberación          : 09/01/2026
  * Autorizó                     : Jesús Núñez
- * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
+ * Versión                      : 2.0
+ * Fecha de mantenimiento       : 14/01/2026
+ * Folio de mantenimiento       : 1
+ * Tipo de mantenimiento        : Perfectivo
+ * Descripción del mantenimiento: Eliminación de Services - Lógica movida al modelo
+ * Responsable                  : Jesús Núñez
+ * Revisor                      : Jesús Núñez
  */
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-/**
- * Modelo Package
- * 
- * Representa un paquete/plan comercial que pueden contratar los negocios.
- *
- * @property int $id
- * @property string $name
- * @property string $description
- * @property float $price
- * @property int $duration_days
- * @property bool $has_reports
- * @property bool $has_statistics
- * @property bool $has_filters
- * @property bool $is_active
- */
 class Package extends Model
 {
     use HasFactory, SoftDeletes;
 
     /**
      * Los atributos que son asignables en masa.
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
         'name',
@@ -60,8 +45,6 @@ class Package extends Model
 
     /**
      * Los atributos que deben ser convertidos.
-     *
-     * @var array<string, string>
      */
     protected $casts = [
         'price' => 'decimal:2',
@@ -76,8 +59,6 @@ class Package extends Model
 
     /**
      * Relación: Un paquete puede estar en muchas suscripciones.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function businessPackages()
     {
@@ -86,9 +67,6 @@ class Package extends Model
 
     /**
      * Scope: Filtra paquetes activos.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeActive($query)
     {
@@ -97,11 +75,74 @@ class Package extends Model
 
     /**
      * Verifica si el paquete tiene órdenes ilimitadas.
-     *
-     * @return bool
      */
     public function hasUnlimitedOrders(): bool
     {
         return $this->max_orders === null;
+    }
+
+    // ====================================================================
+    // MÉTODOS DE LÓGICA DE NEGOCIO (Anteriormente en PackageService)
+    // ====================================================================
+
+    /**
+     * Crea un nuevo paquete comercial.
+     *
+     * @param array $data
+     * @return Package
+     */
+    public static function createPackage(array $data): Package
+    {
+        return self::create($data);
+    }
+
+    /**
+     * Actualiza el paquete.
+     *
+     * @param array $data
+     * @return bool
+     */
+    public function updatePackage(array $data): bool
+    {
+        return $this->update($data);
+    }
+
+    /**
+     * Obtiene todos los paquetes activos ordenados por precio.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function getActivePackages()
+    {
+        return self::active()->orderBy('price')->get();
+    }
+
+    /**
+     * Activa o desactiva el paquete.
+     *
+     * @param bool $isActive
+     * @return bool
+     */
+    public function toggleStatus(bool $isActive): bool
+    {
+        return $this->update(['is_active' => $isActive]);
+    }
+
+    /**
+     * Suscribe un negocio a este paquete.
+     *
+     * @param Business $business
+     * @return BusinessPackage
+     */
+    public function subscribeBusinessTo(Business $business): BusinessPackage
+    {
+        return BusinessPackage::create([
+            'business_id' => $business->id,
+            'package_id' => $this->id,
+            'start_date' => now(),
+            'end_date' => now()->addDays($this->duration_days),
+            'price_paid' => $this->price,
+            'status' => 'active',
+        ]);
     }
 }

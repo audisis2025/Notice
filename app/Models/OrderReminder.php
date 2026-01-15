@@ -1,44 +1,26 @@
 <?php
+
 /**
  * Nombre de la clase           : OrderReminder
  * Descripción de la clase      : Modelo Eloquent que representa un recordatorio
- *                                programado para una orden
- * Fecha de creación            : 09/01/2026
- * Elaboró                      : Jesús Núñez
- * Fecha de liberación          : 09/01/2026
- * Autorizó                     : Jesús Núñez
- * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
+ *                                con lógica de negocio integrada
+ * Versión                      : 2.0
+ * Fecha de mantenimiento       : 14/01/2026
+ * Tipo de mantenimiento        : Perfectivo
  */
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
-/**
- * Modelo OrderReminder
- * 
- * Representa un recordatorio programado para una orden.
- *
- * @property int $id
- * @property int $order_id
- * @property int $reminder_minutes
- * @property string $scheduled_at
- * @property bool $sent
- */
 class OrderReminder extends Model
 {
     use HasFactory;
 
     /**
      * Los atributos que son asignables en masa.
-     *
-     * @var array<int, string>
      */
     protected $fillable = [
         'order_id',
@@ -50,8 +32,6 @@ class OrderReminder extends Model
 
     /**
      * Los atributos que deben ser convertidos.
-     *
-     * @var array<string, string>
      */
     protected $casts = [
         'reminder_minutes' => 'integer',
@@ -62,8 +42,6 @@ class OrderReminder extends Model
 
     /**
      * Relación: Un recordatorio pertenece a una orden.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function order()
     {
@@ -72,13 +50,62 @@ class OrderReminder extends Model
 
     /**
      * Scope: Filtra recordatorios pendientes de envío.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopePending($query)
     {
         return $query->where('sent', false)
             ->where('scheduled_at', '<=', now());
+    }
+
+    // ====================================================================
+    // MÉTODOS DE LÓGICA DE NEGOCIO (Anteriormente en OrderReminderService)
+    // ====================================================================
+
+    /**
+     * Programa recordatorios para una orden.
+     *
+     * @param Order $order
+     * @param array $reminderMinutes
+     */
+    public static function scheduleReminders(Order $order, array $reminderMinutes): void
+    {
+        if (!$order->ready_at) {
+            return;
+        }
+
+        $readyTime = Carbon::parse($order->ready_at);
+
+        foreach ($reminderMinutes as $minutes) {
+            $scheduledAt = $readyTime->copy()->addMinutes($minutes);
+
+            self::create([
+                'order_id' => $order->id,
+                'reminder_minutes' => $minutes,
+                'scheduled_at' => $scheduledAt,
+                'sent' => false,
+            ]);
+        }
+    }
+
+    /**
+     * Envía recordatorios pendientes.
+     */
+    public static function sendPendingReminders(): void
+    {
+        $pendingReminders = self::pending()->get();
+
+        foreach ($pendingReminders as $reminder) {
+            $order = $reminder->order;
+
+            // Solo enviar si la orden sigue lista
+            if ($order->status === 'ready' && $order->user) {
+                $order->user->notify(new \App\Notifications\OrderReminderNotification($order));
+
+                $reminder->update([
+                    'sent' => true,
+                    'sent_at' => now(),
+                ]);
+            }
+        }
     }
 }

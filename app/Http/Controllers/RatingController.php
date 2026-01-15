@@ -1,24 +1,17 @@
 <?php
+
 /**
  * Nombre de la clase           : RatingController
- * Descripción de la clase      : Controlador que gestiona la visualización de
- *                                calificaciones de negocios
- * Fecha de creación            : 09/01/2026
- * Elaboró                      : Jesús Núñez
- * Fecha de liberación          : 09/01/2026
- * Autorizó                     : Jesús Núñez
- * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
+ * Descripción de la clase      : Controlador que gestiona calificaciones sin Services
+ * Versión                      : 2.0
+ * Fecha de mantenimiento       : 14/01/2026
+ * Tipo de mantenimiento        : Perfectivo
  */
+
 namespace App\Http\Controllers;
 
 use App\Models\Business;
-use App\Services\RatingService;
+use App\Models\Rating;
 use Illuminate\Http\Request;
 
 /**
@@ -31,27 +24,7 @@ use Illuminate\Http\Request;
 class RatingController extends Controller
 {
     /**
-     * Instancia del servicio de calificaciones.
-     *
-     * @var RatingService
-     */
-    protected RatingService $ratingService;
-
-    /**
-     * Constructor del controlador.
-     *
-     * @param RatingService $ratingService
-     */
-    public function __construct(RatingService $ratingService)
-    {
-        $this->ratingService = $ratingService;
-    }
-
-    /**
      * Muestra las calificaciones de un negocio.
-     *
-     * @param Business $business
-     * @return \Illuminate\View\View
      */
     public function index(Business $business)
     {
@@ -60,7 +33,8 @@ class RatingController extends Controller
             ->latest()
             ->paginate(15);
 
-        $stats = $this->ratingService->getBusinessRatingStats($business->id);
+        // Obtener estadísticas usando el método del modelo
+        $stats = Rating::getBusinessRatingStats($business->id);
 
         return view('ratings.index', compact('business', 'ratings', 'stats'));
     }

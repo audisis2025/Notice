@@ -1,30 +1,22 @@
 <?php
+
 /**
  * Nombre de la clase           : CouponController
  * Descripción de la clase      : Controlador que gestiona las operaciones CRUD
- *                                de cupones de descuento
- * Fecha de creación            : 09/01/2026
- * Elaboró                      : Jesús Núñez
- * Fecha de liberación          : 09/01/2026
- * Autorizó                     : Jesús Núñez
- * Versión                      : 1.0
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
- * Tipo de mantenimiento        :
- * Descripción del mantenimiento: 
- * Responsable                  : 
- * Revisor                      : 
+ *                                de cupones sin Services
+ * Versión                      : 2.0
+ * Fecha de mantenimiento       : 14/01/2026
+ * Tipo de mantenimiento        : Perfectivo
  */
+
 namespace App\Http\Controllers;
 
 use App\Models\Coupon;
 use App\Http\Requests\StoreCouponRequest;
 use App\Http\Requests\UpdateCouponRequest;
 use App\Http\Requests\ValidateCouponRequest;
-use App\Services\CouponService;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controller;
-
+use Illuminate\Support\Facades\DB;
 
 /**
  * CouponController
@@ -35,29 +27,13 @@ use Illuminate\Routing\Controller;
  */
 class CouponController extends Controller
 {
-    /**
-     * Instancia del servicio de cupones.
-     *
-     * @var CouponService
-     */
-    protected CouponService $couponService;
-
-    /**
-     * Constructor del controlador.
-     *
-     * @param CouponService $couponService
-     */
-    public function __construct(CouponService $couponService)
+    public function __construct()
     {
         $this->middleware('can:manage-coupons');
-        $this->couponService = $couponService;
     }
 
     /**
      * Muestra el listado de cupones.
-     *
-     * @param Request $request
-     * @return \Illuminate\View\View
      */
     public function index(Request $request)
     {
@@ -82,8 +58,6 @@ class CouponController extends Controller
 
     /**
      * Muestra el formulario para crear un nuevo cupón.
-     *
-     * @return \Illuminate\View\View
      */
     public function create()
     {
@@ -92,18 +66,22 @@ class CouponController extends Controller
 
     /**
      * Almacena un nuevo cupón en la base de datos.
-     *
-     * @param StoreCouponRequest $request
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(StoreCouponRequest $request)
     {
+        DB::beginTransaction();
+
         try {
-            $this->couponService->generateCoupon($request->validated());
+            Coupon::generateCoupon($request->validated());
+
+            DB::commit();
 
             return redirect()->route('coupons.index')
                 ->with('success', 'Cupón generado exitosamente.');
+
         } catch (\Exception $e) {
+            DB::rollBack();
+
             return back()->withInput()
                 ->with('error', 'Error al generar el cupón: ' . $e->getMessage());
         }
@@ -111,9 +89,6 @@ class CouponController extends Controller
 
     /**
      * Muestra los detalles de un cupón específico.
-     *
-     * @param Coupon $coupon
-     * @return \Illuminate\View\View
      */
     public function show(Coupon $coupon)
     {
@@ -122,9 +97,6 @@ class CouponController extends Controller
 
     /**
      * Muestra el formulario para editar un cupón.
-     *
-     * @param Coupon $coupon
-     * @return \Illuminate\View\View
      */
     public function edit(Coupon $coupon)
     {
@@ -133,19 +105,22 @@ class CouponController extends Controller
 
     /**
      * Actualiza un cupón en la base de datos.
-     *
-     * @param UpdateCouponRequest $request
-     * @param Coupon $coupon
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(UpdateCouponRequest $request, Coupon $coupon)
     {
+        DB::beginTransaction();
+
         try {
-            $this->couponService->updateCoupon($coupon, $request->validated());
+            $coupon->updateCoupon($request->validated());
+
+            DB::commit();
 
             return redirect()->route('coupons.index')
                 ->with('success', 'Cupón actualizado exitosamente.');
+
         } catch (\Exception $e) {
+            DB::rollBack();
+
             return back()->withInput()
                 ->with('error', 'Error al actualizar el cupón: ' . $e->getMessage());
         }
@@ -153,18 +128,22 @@ class CouponController extends Controller
 
     /**
      * Elimina un cupón de la base de datos.
-     *
-     * @param Coupon $coupon
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Coupon $coupon)
     {
+        DB::beginTransaction();
+
         try {
-            $this->couponService->deleteCoupon($coupon);
+            $coupon->delete();
+
+            DB::commit();
 
             return redirect()->route('coupons.index')
                 ->with('success', 'Cupón eliminado exitosamente.');
+
         } catch (\Exception $e) {
+            DB::rollBack();
+
             return back()
                 ->with('error', 'Error al eliminar el cupón: ' . $e->getMessage());
         }
@@ -172,20 +151,18 @@ class CouponController extends Controller
 
     /**
      * Valida un cupón por su código (API para AJAX).
-     *
-     * @param ValidateCouponRequest $request
-     * @return \Illuminate\Http\JsonResponse
      */
     public function validate(ValidateCouponRequest $request)
     {
         try {
-            $coupon = $this->couponService->validateCoupon($request->code);
+            $coupon = Coupon::validateCoupon($request->code);
 
             return response()->json([
                 'valid' => true,
                 'coupon' => $coupon,
                 'message' => 'Cupón válido.',
             ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'valid' => false,

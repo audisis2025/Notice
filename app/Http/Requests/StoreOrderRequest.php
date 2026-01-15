@@ -3,52 +3,57 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-/**
- * StoreOrderRequest
- * 
- * Valida la creación de una nueva orden por un negocio.
- *
- * @package App\Http\Requests
- */
 class StoreOrderRequest extends FormRequest
 {
     /**
-     * Determina si el usuario está autorizado para hacer esta petición.
-     *
-     * @return bool
+     * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return auth()->user()->isBusinessAdministrator();
+        return true;
     }
 
     /**
-     * Obtiene las reglas de validación que se aplican a la petición.
+     * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'description' => ['required', 'string', 'max:1000'],
-            'amount' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            // ✅ SOLO order_number es requerido
+            'order_number' => [
+                'required',
+                'string',
+                'max:100',
+                // Validar que sea único para este negocio
+                Rule::unique('orders')->where(function ($query) {
+                    return $query->where('business_id', auth()->user()->business->id);
+                }),
+            ],
+
+            // ✅ Description y amount son OPCIONALES
+            'description' => 'nullable|string|max:500',
+            'amount' => 'nullable|numeric|min:0',
         ];
     }
 
     /**
-     * Obtiene los mensajes de error personalizados para las reglas de validación.
+     * Get custom messages for validator errors.
      *
      * @return array<string, string>
      */
     public function messages(): array
     {
         return [
-            'description.required' => 'La descripción de la orden es obligatoria.',
-            'description.max' => 'La descripción no puede tener más de 1000 caracteres.',
-            'amount.required' => 'El monto es obligatorio.',
+            'order_number.required' => 'El número de orden es obligatorio.',
+            'order_number.unique' => 'Este número de orden ya existe en tu negocio.',
+            'order_number.max' => 'El número de orden no puede exceder 100 caracteres.',
             'amount.numeric' => 'El monto debe ser un número.',
-            'amount.min' => 'El monto debe ser mayor o igual a 0.',
+            'amount.min' => 'El monto debe ser mayor o igual a cero.',
+            'description.max' => 'La descripción no puede exceder 500 caracteres.',
         ];
     }
 }
