@@ -3,17 +3,18 @@
  * Nombre de la vista           : sidebar.blade.php
  * Descripción de la vista      : Layout de barra lateral de navegación con menú principal
  *                                y perfil de usuario (altura completa y fija)
+ *                                Mi Paquete como item del menú
  * Fecha de creación            : 09/01/2026
  * Elaboró                      : Jesús Núñez
  * Fecha de liberación          : 09/01/2026
  * Autorizó                     : Jesús Núñez
- * Versión                      : 1.1
- * Fecha de mantenimiento       : 
- * Folio de mantenimiento       : 
+ * Versión                      : 1.3
+ * Fecha de mantenimiento       : 15/01/2026
+ * Folio de mantenimiento       : 6
  * Tipo de mantenimiento        : Perfectivo
- * Descripción del mantenimiento: Sidebar fijo con altura completa
- * Responsable                  : 
- * Revisor                      : 
+ * Descripción del mantenimiento: Mi Paquete como item de menú, no card
+ * Responsable                  : Sistema
+ * Revisor                      : Jesús Núñez
  */
 --}}
 
@@ -82,15 +83,49 @@
 
                         {{-- LIVEWIRE CLÁSICO → SIN wire:navigate --}}
                         @if (auth()->user()->role === 'BusinessAdministrator')
-                            <flux:navlist.item icon="shopping-bag" :href="route('orders.index')"
-                                :current="request()->routeIs('orders.*')">
-                                Órdenes
-                            </flux:navlist.item>
+                            {{-- Verificar si tiene negocio y paquete --}}
+                            @php
+                                $business = auth()->user()->business;
+                                $currentPackage = $business?->currentPackage();
+                            @endphp
 
-                            <flux:navlist.item icon="chart-bar" :href="route('reports.index')"
-                                :current="request()->routeIs('reports.*')">
-                                Reportes
-                            </flux:navlist.item>
+                            {{-- Órdenes y Reportes: SOLO si tiene paquete activo --}}
+                            @if($currentPackage)
+                                <flux:navlist.item icon="shopping-bag" :href="route('orders.index')"
+                                    :current="request()->routeIs('orders.*')">
+                                    Órdenes
+                                </flux:navlist.item>
+
+                                <flux:navlist.item icon="chart-bar" :href="route('reports.index')"
+                                    :current="request()->routeIs('reports.*')">
+                                    Reportes
+                                </flux:navlist.item>
+                            @endif
+
+                            {{-- Mi Paquete: SIEMPRE visible para BusinessAdministrator con negocio --}}
+                            @if($business)
+                                @if($currentPackage)
+                                    <flux:navlist.item icon="cube" :href="route('select.package')"
+                                        :current="request()->routeIs('select.package')">
+                                        <div class="flex items-center justify-between w-full">
+                                            <span>Mi Paquete</span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                                Activo
+                                            </span>
+                                        </div>
+                                    </flux:navlist.item>
+                                @else
+                                    <flux:navlist.item icon="cube" :href="route('select.package')"
+                                        :current="request()->routeIs('select.package')">
+                                        <div class="flex items-center justify-between w-full">
+                                            <span>Mi Paquete</span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                                Sin paquete
+                                            </span>
+                                        </div>
+                                    </flux:navlist.item>
+                                @endif
+                            @endif
                         @endif
 
                     </flux:navlist.group>

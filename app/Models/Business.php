@@ -8,12 +8,12 @@
  * Elaboró                      : Jesús Núñez
  * Fecha de liberación          : 09/01/2026
  * Autorizó                     : Jesús Núñez
- * Versión                      : 2.0
- * Fecha de mantenimiento       : 14/01/2026
- * Folio de mantenimiento       : 1
- * Tipo de mantenimiento        : Perfectivo
- * Descripción del mantenimiento: Eliminación de Services - Lógica movida al modelo
- * Responsable                  : Jesús Núñez
+ * Versión                      : 2.1
+ * Fecha de mantenimiento       : 15/01/2026
+ * Folio de mantenimiento       : 2
+ * Tipo de mantenimiento        : Correctivo
+ * Descripción del mantenimiento: Agregado método currentPackage() como alias
+ * Responsable                  : Sistema
  * Revisor                      : Jesús Núñez
  */
 
@@ -174,6 +174,16 @@ class Business extends Model
             ->with('package')
             ->latest()
             ->first();
+    }
+
+    /**
+     * Alias de activePackage() para mantener consistencia en el código.
+     * 
+     * @return \App\Models\BusinessPackage|null
+     */
+    public function currentPackage()
+    {
+        return $this->activePackage();
     }
 
     // ====================================================================
