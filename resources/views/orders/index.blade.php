@@ -2,10 +2,10 @@
 /**
  * Nombre de la vista           : index.blade.php
  * Descripción de la vista      : Vista principal de gestión de órdenes
- *                                SIN descripción/precio, solo número de orden
- * Versión                      : 4.0
- * Fecha de mantenimiento       : 14/01/2026
- * Descripción del mantenimiento: Eliminación de columnas innecesarias + alertas corregidas
+ *                                CON columna "Escaneado desde" en lugar de Cliente
+ * Versión                      : 5.1
+ * Fecha de mantenimiento       : 15/01/2026
+ * Descripción del mantenimiento: Mostrar info del dispositivo en lugar de cliente
  */
 --}}
 
@@ -191,7 +191,7 @@
                                 </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    Cliente
+                                    Escaneado desde
                                 </th>
                                 <th
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -215,23 +215,55 @@
                                             {{ $order->order_number }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @if ($order->user)
-                                            <div class="flex items-center">
-                                                <div
-                                                    class="flex-shrink-0 h-8 w-8 bg-gray-200 dark:bg-zinc-700 rounded-full flex items-center justify-center">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                                        class="w-5 h-5 text-gray-500 dark:text-gray-400">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                                                    </svg>
+                                    <td class="px-6 py-4">
+                                        @if ($order->associated_at)
+                                            @php
+                                                // Extraer info del dispositivo de la descripción
+                                                preg_match(
+                                                    '/\[Escaneado desde: (.+?) - IP: (.+?)\]/',
+                                                    $order->description,
+                                                    $matches,
+                                                );
+                                                $device = $matches[1] ?? 'Desconocido';
+                                                $ip = $matches[2] ?? '';
+                                            @endphp
+                                            <div class="flex items-start">
+                                                <div class="flex-shrink-0 mr-3">
+                                                    @if (str_contains($device, 'iOS'))
+                                                        <svg class="w-5 h-5 text-gray-500" fill="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path
+                                                                d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+                                                        </svg>
+                                                    @elseif(str_contains($device, 'Android'))
+                                                        <svg class="w-5 h-5 text-green-500" fill="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path
+                                                                d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.15-.65-.06-.83.22l-1.88 3.24a11.46 11.46 0 0 0-8.94 0L5.65 5.67c-.19-.28-.54-.37-.83-.22-.3.16-.42.54-.26.85l1.84 3.18C2.92 12.3 1.11 16.91 1.11 22h21.78c0-5.09-1.81-9.7-5.29-12.52zM7.4 19.93c-.68 0-1.23-.55-1.23-1.23s.55-1.23 1.23-1.23 1.23.55 1.23 1.23-.55 1.23-1.23 1.23zm9.2 0c-.68 0-1.23-.55-1.23-1.23s.55-1.23 1.23-1.23 1.23.55 1.23 1.23-.55 1.23-1.23 1.23z" />
+                                                        </svg>
+                                                    @else
+                                                        <svg class="w-5 h-5 text-gray-500" fill="none"
+                                                            viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                        </svg>
+                                                    @endif
                                                 </div>
-                                                <div class="ml-3">
-                                                    <p class="text-sm font-medium text-gray-900 dark:text-white">
-                                                        {{ $order->user->name }}</p>
-                                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                                        {{ $order->user->phone }}</p>
+                                                <div class="min-w-0 flex-1">
+                                                    <p
+                                                        class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                                        {{ $device }}
+                                                    </p>
+                                                    @if ($ip)
+                                                        <p
+                                                            class="text-xs text-gray-500 dark:text-gray-400 font-mono truncate">
+                                                            {{ $ip }}
+                                                        </p>
+                                                    @endif
+                                                    <p class="text-xs text-gray-400 dark:text-gray-500">
+                                                        {{ $order->associated_at->format('d/m/Y H:i') }}
+                                                    </p>
                                                 </div>
                                             </div>
                                         @else
@@ -240,9 +272,9 @@
                                                     viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
                                                     class="w-5 h-5 mr-2">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
                                                 </svg>
-                                                <span class="text-sm">Sin asociar</span>
+                                                <span class="text-sm">Sin escanear</span>
                                             </div>
                                         @endif
                                     </td>
@@ -281,26 +313,133 @@
                                             {{ $order->created_at->format('H:i') }}
                                         </div>
                                     </td>
+
+                                    {{-- COLUMNA DE ACCIONES (sin cambios) --}}
                                     <td class="px-6 py-4 whitespace-nowrap text-center">
                                         <div class="flex justify-center space-x-1">
-                                            {{-- Marcar como pagada --}}
-                                            @if ($order->status === 'pending')
-                                                <form action="{{ route('orders.mark-paid', $order) }}" method="POST"
-                                                    class="inline-block">
-                                                    @csrf
-                                                    <button type="submit"
-                                                        class="inline-flex items-center px-3 py-1.5 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
-                                                        title="Marcar como pagada"
-                                                        onclick="return confirm('¿Marcar esta orden como pagada?')">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                            viewBox="0 0 24 24" stroke-width="1.5"
-                                                            stroke="currentColor" class="w-4 h-4">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                            @endif
+                                            {{-- Dropdown para cambiar estado --}}
+                                            <div class="relative inline-block text-left" x-data="{ open: false }">
+                                                <button @click="open = !open" @click.away="open = false"
+                                                    type="button"
+                                                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 dark:border-zinc-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors"
+                                                    title="Cambiar estado">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                        class="w-4 h-4 mr-1">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                                    </svg>
+                                                    <span class="text-xs">Estado</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                        class="w-3 h-3 ml-1">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                                    </svg>
+                                                </button>
+
+                                                {{-- Dropdown desplegado --}}
+                                                <div x-show="open"
+                                                    x-transition:enter="transition ease-out duration-100"
+                                                    x-transition:enter-start="transform opacity-0 scale-95"
+                                                    x-transition:enter-end="transform opacity-100 scale-100"
+                                                    x-transition:leave="transition ease-in duration-75"
+                                                    x-transition:leave-start="transform opacity-100 scale-100"
+                                                    x-transition:leave-end="transform opacity-0 scale-95"
+                                                    class="absolute left-1/2 transform -translate-x-1/2 z-10 mt-2 w-56 origin-top rounded-md bg-white dark:bg-zinc-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                                                    style="display: none;">
+                                                    <div class="py-1 flex flex-col">
+                                                        {{-- Pendiente --}}
+                                                        <form action="{{ route('orders.change-status', $order) }}"
+                                                            method="POST" class="block w-full">
+                                                            @csrf
+                                                            <input type="hidden" name="status" value="pending">
+                                                            <button type="submit"
+                                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 flex items-center"
+                                                                onclick="return confirm('¿Cambiar a Pendiente?')">
+                                                                <span
+                                                                    class="w-2 h-2 rounded-full bg-yellow-500 mr-2 flex-shrink-0"></span>
+                                                                <span>Pendiente</span>
+                                                            </button>
+                                                        </form>
+
+                                                        {{-- Pagada --}}
+                                                        <form action="{{ route('orders.change-status', $order) }}"
+                                                            method="POST" class="block w-full">
+                                                            @csrf
+                                                            <input type="hidden" name="status" value="paid">
+                                                            <button type="submit"
+                                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex items-center justify-between"
+                                                                onclick="return confirm('¿Cambiar a Pagada?')">
+                                                                <div class="flex items-center">
+                                                                    <span
+                                                                        class="w-2 h-2 rounded-full bg-blue-500 mr-2 flex-shrink-0"></span>
+                                                                    <span>Pagada</span>
+                                                                </div>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                    viewBox="0 0 24 24" stroke-width="1.5"
+                                                                    stroke="currentColor"
+                                                                    class="w-4 h-4 text-blue-500 flex-shrink-0">
+                                                                    <path stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+
+                                                        {{-- Lista --}}
+                                                        <form action="{{ route('orders.change-status', $order) }}"
+                                                            method="POST" class="block w-full">
+                                                            @csrf
+                                                            <input type="hidden" name="status" value="ready">
+                                                            <button type="submit"
+                                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 flex items-center justify-between"
+                                                                onclick="return confirm('¿Cambiar a Lista?')">
+                                                                <div class="flex items-center">
+                                                                    <span
+                                                                        class="w-2 h-2 rounded-full bg-orange-500 mr-2 flex-shrink-0"></span>
+                                                                    <span>Lista</span>
+                                                                </div>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                    viewBox="0 0 24 24" stroke-width="1.5"
+                                                                    stroke="currentColor"
+                                                                    class="w-4 h-4 text-orange-500 flex-shrink-0">
+                                                                    <path stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+
+                                                        {{-- Entregada --}}
+                                                        <form action="{{ route('orders.change-status', $order) }}"
+                                                            method="POST" class="block w-full">
+                                                            @csrf
+                                                            <input type="hidden" name="status" value="delivered">
+                                                            <button type="submit"
+                                                                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 flex items-center"
+                                                                onclick="return confirm('¿Cambiar a Entregada?')">
+                                                                <span
+                                                                    class="w-2 h-2 rounded-full bg-green-500 mr-2 flex-shrink-0"></span>
+                                                                <span>Entregada</span>
+                                                            </button>
+                                                        </form>
+
+                                                        <div
+                                                            class="border-t border-gray-200 dark:border-zinc-700 my-1">
+                                                        </div>
+
+                                                        {{-- Cancelada --}}
+                                                        <button type="button"
+                                                            onclick="confirmCancel('{{ $order->id }}')"
+                                                            class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center">
+                                                            <span
+                                                                class="w-2 h-2 rounded-full bg-red-500 mr-2 flex-shrink-0"></span>
+                                                            <span>Cancelar orden</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
 
                                             {{-- Ver QR de asociación --}}
                                             @if ($order->status === 'paid' && $order->qr_code && !$order->user_id)
@@ -313,29 +452,8 @@
                                                         class="w-4 h-4">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
                                                     </svg>
                                                 </button>
-                                            @endif
-
-                                            {{-- Marcar como lista --}}
-                                            @if ($order->status === 'paid' && $order->user_id)
-                                                <form action="{{ route('orders.mark-ready', $order) }}"
-                                                    method="POST" class="inline-block">
-                                                    @csrf
-                                                    <button type="submit"
-                                                        class="inline-flex items-center px-3 py-1.5 border border-orange-600 text-orange-600 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
-                                                        title="Marcar como lista"
-                                                        onclick="return confirm('¿Marcar esta orden como lista para entrega?')">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                            viewBox="0 0 24 24" stroke-width="1.5"
-                                                            stroke="currentColor" class="w-4 h-4">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                        </svg>
-                                                    </button>
-                                                </form>
                                             @endif
 
                                             {{-- Ver QR de entrega --}}
@@ -349,22 +467,6 @@
                                                         class="w-4 h-4">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
-                                                    </svg>
-                                                </button>
-                                            @endif
-
-                                            {{-- Cancelar --}}
-                                            @if (in_array($order->status, ['pending', 'paid', 'ready']))
-                                                <button type="button" onclick="confirmCancel('{{ $order->id }}')"
-                                                    class="inline-flex items-center px-3 py-1.5 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                                    title="Cancelar orden">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                                        class="w-4 h-4">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
                                                 </button>
                                             @endif
@@ -409,7 +511,7 @@
         </div>
     </div>
 
-    {{-- Modal de QR --}}
+    {{-- Modal de QR (sin cambios) --}}
     <div id="qrModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title"
         role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -474,7 +576,6 @@
 
     @push('scripts')
         <script>
-            // ===== ALERTAS DE SESIÓN (usando helpers personalizados) =====
             @if (session('success'))
                 showSuccess('{{ session('success') }}');
             @endif
@@ -491,7 +592,6 @@
                 showInfo('{{ session('info') }}');
             @endif
 
-            // ===== FUNCIONES DEL MODAL QR =====
             function showQRModal(orderId, type, orderNumber, qrUrl) {
                 const modal = document.getElementById('qrModal');
                 const title = document.getElementById('qrModalTitle');
@@ -499,12 +599,12 @@
                 const image = document.getElementById('qrImage');
                 const description = document.getElementById('qrDescriptionText');
 
-                title.textContent = type === 'association' ? 'Código QR - Asociación' : 'Código QR - Entrega';
+                title.textContent = type === 'association' ? 'QR de Asociación' : 'QR de Entrega';
                 orderNumberSpan.textContent = orderNumber;
                 image.src = qrUrl;
                 description.textContent = type === 'association' ?
-                    'El cliente debe escanear este QR para asociar la orden a su cuenta' :
-                    'El cliente debe escanear este QR para confirmar la entrega';
+                    '📱 El cliente escanea este QR y la orden se asocia automáticamente' :
+                    '✅ El cliente escanea este QR para confirmar que recibió su orden';
 
                 modal.classList.remove('hidden');
             }
@@ -513,7 +613,6 @@
                 document.getElementById('qrModal').classList.add('hidden');
             }
 
-            // ===== FUNCIÓN CANCELAR ORDEN =====
             function confirmCancel(orderId) {
                 Swal.fire({
                     title: '¿Cancelar orden?',

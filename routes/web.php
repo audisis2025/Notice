@@ -85,7 +85,6 @@ Route::middleware(['auth'])->group(function () {
             ->name('business.update-delivery-period');
 
         // ✅ PAQUETES DISPONIBLES (DESPUÉS DE TENER NEGOCIO)
-        // ⚠️ ESTAS RUTAS ESTABAN MAL - CORREGIDAS AQUÍ
         Route::get('packages/available', [PackageController::class, 'available'])->name('packages.available');
         Route::post('packages/{package}/subscribe', [PackageController::class, 'subscribe'])->name('packages.subscribe');
 
@@ -95,13 +94,24 @@ Route::middleware(['auth'])->group(function () {
 
         // Órdenes (requiere paquete activo y negocio activo)
         Route::middleware(['package.active', 'business.active'])->group(function () {
+
+            // ✅ NUEVAS RUTAS - Deben estar ANTES del resource
+            Route::get('orders/{order}/show-qr', [OrderController::class, 'showQR'])
+                ->name('orders.show-qr');
+            Route::get('orders/{order}/check-scanned', [OrderController::class, 'checkScanned'])
+                ->name('orders.check-scanned');
+
+            // Resource de órdenes
             Route::resource('orders', OrderController::class);
+
             Route::post('orders/{order}/mark-paid', [OrderController::class, 'markAsPaid'])
                 ->name('orders.mark-paid');
             Route::post('orders/{order}/mark-ready', [OrderController::class, 'markAsReady'])
                 ->name('orders.mark-ready');
             Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])
                 ->name('orders.cancel');
+            Route::post('orders/{order}/change-status', [OrderController::class, 'changeStatus'])
+                ->name('orders.change-status');
             Route::post('orders/{order}/schedule-reminders', [OrderController::class, 'scheduleReminders'])
                 ->name('orders.schedule-reminders');
         });
@@ -121,3 +131,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('chat/{order}', [ChatController::class, 'show'])->name('chat.show');
     });
 });
+
+// ✅ RUTA PÚBLICA - Asociar orden mediante QR (fuera de middleware auth)
+Route::get('orders/associate/{token}', [OrderController::class, 'associate'])
+    ->name('orders.associate');

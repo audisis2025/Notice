@@ -2,20 +2,9 @@
 
 /**
  * Nombre de la clase           : Order
- * Descripción de la clase      : Modelo Eloquent que representa una orden con
- *                                su lógica de negocio y gestión de estados
- * Fecha de creación            : 09/01/2026
- * Elaboró                      : Jesús Núñez
- * Fecha de liberación          : 14/01/2026
- * Autorizó                     : Jesús Núñez
- * Versión                      : 3.0
- * Fecha de mantenimiento       : 14/01/2026
- * Folio de mantenimiento       : 2
- * Tipo de mantenimiento        : Perfectivo
- * Descripción del mantenimiento: Simplificación - Solo order_number requerido
- *                                description y amount son opcionales
- * Responsable                  : Jesús Núñez
- * Revisor                      : Jesús Núñez
+ * Descripción de la clase      : Modelo con Chillerlan - Opciones simplificadas
+ * Versión                      : 7.3 Chillerlan Simplified
+ * Fecha de mantenimiento       : 15/01/2026
  */
 
 namespace App\Models;
@@ -23,17 +12,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Carbon\Carbon;
+
+// Chillerlan QR Code
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 
 class Order extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /**
-     * Los atributos que son asignables en masa.
-     */
     protected $fillable = [
         'order_number',
         'business_id',
@@ -43,6 +33,8 @@ class Order extends Model
         'status',
         'qr_code',
         'qr_delivery_code',
+        'association_token',
+        'delivery_token',
         'paid_at',
         'ready_at',
         'delivered_at',
@@ -52,9 +44,6 @@ class Order extends Model
         'chat_enabled',
     ];
 
-    /**
-     * Los atributos que deben ser convertidos.
-     */
     protected $casts = [
         'amount' => 'decimal:2',
         'paid_at' => 'datetime',
@@ -65,287 +54,225 @@ class Order extends Model
         'chat_enabled' => 'boolean',
     ];
 
-    /**
-     * Relación: Una orden pertenece a un negocio.
-     */
     public function business()
     {
         return $this->belongsTo(Business::class);
     }
 
-    /**
-     * Relación: Una orden puede pertenecer a un usuario.
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Relación: Una orden puede tener muchos recordatorios.
-     */
     public function reminders()
     {
         return $this->hasMany(OrderReminder::class);
     }
 
-    /**
-     * Relación: Una orden puede tener una calificación.
-     */
     public function rating()
     {
         return $this->hasOne(Rating::class);
     }
 
-    /**
-     * Relación: Una orden puede tener un chat.
-     */
-    public function chat()
+    public function messages()
     {
-        return $this->hasOne(Chat::class);
+        return $this->hasMany(Message::class);
     }
 
-    /**
-     * Relación: Una orden puede tener muchos códigos QR.
-     */
-    public function qrCodes()
+    public function scopePending($query)
     {
-        return $this->hasMany(OrderQRCode::class);
+        return $query->where('status', 'pending');
     }
 
-    /**
-     * Relación: Código QR de asociación.
-     */
-    public function associationQR()
+    public function scopePaid($query)
     {
-        return $this->hasOne(OrderQRCode::class)->where('type', 'association');
+        return $query->where('status', 'paid');
     }
 
-    /**
-     * Relación: Código QR de entrega.
-     */
-    public function deliveryQR()
-    {
-        return $this->hasOne(OrderQRCode::class)->where('type', 'delivery')->latest();
-    }
-
-    /**
-     * Verifica si la orden está asociada a un usuario.
-     */
-    public function isAssociated(): bool
-    {
-        return $this->user_id !== null && $this->associated_at !== null;
-    }
-
-    /**
-     * Verifica si la orden puede ser entregada.
-     */
-    public function canBeDelivered(): bool
-    {
-        return $this->status === 'ready' && $this->isAssociated();
-    }
-
-    /**
-     * Verifica si se ha excedido el período de entrega.
-     */
-    public function isDelayedDelivery(): bool
-    {
-        if (!$this->ready_at || $this->status !== 'ready') {
-            return false;
-        }
-
-        $deliveryPeriod = $this->business->delivery_period_minutes;
-        $readyTime = Carbon::parse($this->ready_at);
-        $expectedDeliveryTime = $readyTime->addMinutes($deliveryPeriod);
-
-        return Carbon::now()->isAfter($expectedDeliveryTime);
-    }
-
-    /**
-     * Scope: Filtra órdenes por estado.
-     */
-    public function scopeByStatus($query, string $status)
-    {
-        return $query->where('status', $status);
-    }
-
-    /**
-     * Scope: Filtra órdenes listas.
-     */
     public function scopeReady($query)
     {
         return $query->where('status', 'ready');
     }
 
-    /**
-     * Scope: Filtra órdenes con retraso en entrega.
-     */
-    public function scopeDelayed($query)
+    public function scopeDelivered($query)
     {
-        return $query->where('status', 'ready')
-            ->whereNotNull('ready_at')
-            ->where('chat_enabled', false)
-            ->get()
-            ->filter(function ($order) {
-                return $order->isDelayedDelivery();
-            });
+        return $query->where('status', 'delivered');
     }
 
-    // ====================================================================
-    // MÉTODOS DE LÓGICA DE NEGOCIO (Anteriormente en OrderService)
-    // ====================================================================
-
-    /**
-     * Crea una nueva orden SOLO con número de orden.
-     * Description y amount son opcionales.
-     *
-     * @param Business $business
-     * @param array $data
-     * @return Order
-     */
-    public static function createOrder(Business $business, array $data): Order
+    public function scopeCancelled($query)
     {
-        return self::create([
-            'order_number' => $data['order_number'], // ✅ Ahora manual
-            'business_id' => $business->id,
-            'description' => $data['description'] ?? null, // ✅ Opcional
-            'amount' => $data['amount'] ?? null, // ✅ Opcional
-            'status' => 'pending',
-        ]);
+        return $query->where('status', 'cancelled');
     }
 
-    /**
-     * Marca la orden como pagada y genera QR de asociación.
-     *
-     * @return bool
-     */
-    public function markAsPaid(): bool
+    public function isPending(): bool
     {
-        // Generar código QR para asociar orden
-        $qrCode = $this->generateQRCode('association');
-
-        return $this->update([
-            'status' => 'paid',
-            'paid_at' => now(),
-            'qr_code' => $qrCode,
-        ]);
+        return $this->status === 'pending';
     }
 
-    /**
-     * Marca la orden como lista y genera QR de entrega.
-     *
-     * @return bool
-     */
-    public function markAsReady(): bool
+    public function isPaid(): bool
     {
-        // Generar QR para confirmación de entrega
-        $qrDeliveryCode = $this->generateQRCode('delivery');
+        return $this->status === 'paid';
+    }
 
-        $result = $this->update([
-            'status' => 'ready',
-            'ready_at' => now(),
-            'qr_delivery_code' => $qrDeliveryCode,
-        ]);
+    public function isReady(): bool
+    {
+        return $this->status === 'ready';
+    }
 
-        // Notificar al usuario si está asociado
-        if ($this->user) {
-            $this->user->notify(new \App\Notifications\OrderReadyNotification($this));
+    public function isDelivered(): bool
+    {
+        return $this->status === 'delivered';
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === 'cancelled';
+    }
+
+    public function isAssociated(): bool
+    {
+        return !is_null($this->user_id);
+    }
+
+    public function isDelayedDelivery(): bool
+    {
+        if (!$this->ready_at) {
+            return false;
         }
 
-        return $result;
+        $delayThreshold = config('orders.delay_threshold_minutes', 30);
+        return $this->ready_at->addMinutes($delayThreshold)->isPast();
     }
 
-    /**
-     * Asocia la orden con un usuario mediante escaneo de QR.
-     *
-     * @param User $user
-     * @return bool
-     */
-    public function associateWithUser(User $user): bool
+    public static function createOrder(Business $business, array $data): self
     {
+        $order = self::create([
+            'order_number' => $data['order_number'],
+            'business_id' => $business->id,
+            'description' => $data['description'] ?? null,
+            'amount' => $data['amount'] ?? null,
+            'status' => 'pending',
+        ]);
+
+        // Generar token único
+        $order->association_token = Str::random(32);
+
+        // ✅ USAR CONFIG APP_URL (ngrok) EN LUGAR DE route()
+        $baseUrl = rtrim(config('app.url'), '/');
+        $qrData = $baseUrl . '/orders/associate/' . $order->association_token;
+
+        // Generar QR con la URL completa
+        $order->qr_code = $order->generateQrCode($qrData, "order-{$order->id}-association.png");
+        $order->save();
+
+        return $order;
+    }
+
+    public function associateToUser(User $user, string $token): bool
+    {
+        if ($this->association_token !== $token) {
+            throw new \Exception('Token de asociación inválido.');
+        }
+
+        if ($this->user_id) {
+            throw new \Exception('La orden ya está asociada a un usuario.');
+        }
+
         return $this->update([
             'user_id' => $user->id,
             'associated_at' => now(),
         ]);
     }
 
-    /**
-     * Confirma la entrega de la orden.
-     *
-     * @param User $user
-     * @return bool
-     * @throws \Exception
-     */
-    public function confirmDelivery(User $user): bool
+    public function changeStatus(string $newStatus): bool
     {
-        // Verificar que el usuario sea el dueño de la orden
-        if ($this->user_id !== $user->id) {
-            throw new \Exception('Solo el usuario asociado puede confirmar la entrega.');
+        $validStatuses = ['pending', 'paid', 'ready', 'delivered', 'cancelled'];
+
+        if (!in_array($newStatus, $validStatuses)) {
+            throw new \Exception('Estado inválido.');
         }
 
-        // Verificar que la orden esté lista
-        if ($this->status !== 'ready') {
-            throw new \Exception('La orden no está lista para entrega.');
+        $updates = ['status' => $newStatus];
+
+        switch ($newStatus) {
+            case 'paid':
+                $updates['paid_at'] = $this->paid_at ?? now();
+                break;
+            case 'ready':
+                $updates['ready_at'] = $this->ready_at ?? now();
+                break;
+            case 'delivered':
+                $updates['delivered_at'] = $this->delivered_at ?? now();
+                break;
+            case 'cancelled':
+                $updates['cancelled_at'] = $this->cancelled_at ?? now();
+                break;
         }
 
-        return $this->update([
-            'status' => 'delivered',
-            'delivered_at' => now(),
-        ]);
+        return $this->update($updates);
     }
 
-    /**
-     * Cancela la orden.
-     *
-     * @param string $reason
-     * @return bool
-     */
     public function cancelOrder(string $reason): bool
     {
-        $result = $this->update([
+        return $this->update([
             'status' => 'cancelled',
             'cancelled_at' => now(),
             'cancellation_reason' => $reason,
         ]);
-
-        // Notificar al usuario si está asociado
-        if ($this->user) {
-            $this->user->notify(new \App\Notifications\OrderCancelledNotification($this));
-        }
-
-        return $result;
     }
 
     /**
-     * Genera un código QR para la orden.
-     *
-     * @param string $type (association o delivery)
-     * @return string Path del archivo QR
+     * Genera QR usando Chillerlan
+     * OPCIONES SIMPLIFICADAS - Sin constantes problemáticas
      */
-    protected function generateQRCode(string $type): string
+    private function generateQrCode(string $data, string $filename): string
     {
-        $data = json_encode([
-            'order_id' => $this->id,
-            'order_number' => $this->order_number,
-            'type' => $type,
-            'business_id' => $this->business_id,
-        ]);
+        try {
+            // Crear directorio
+            $directory = storage_path('app/public/qr-codes');
+            if (!file_exists($directory)) {
+                mkdir($directory, 0755, true);
+            }
 
-        $qrCode = QrCode::format('png')
-            ->size(300)
-            ->generate($data);
+            $path = "qr-codes/{$filename}";
+            $fullPath = storage_path("app/public/{$path}");
 
-        $filename = "{$this->order_number}_{$type}_" . time() . '.png';
-        $path = "qrcodes/{$filename}";
+            // Opciones SIMPLIFICADAS que funcionan
+            $options = new QROptions([
+                'version'              => 10,
+                'outputType'           => QRCode::OUTPUT_IMAGE_PNG,
+                'eccLevel'             => QRCode::ECC_L,
+                'scale'                => 10,
+                'imageBase64'          => false,
+                'imageTransparent'     => false,
+                'drawCircularModules'  => false,
+                'drawLightModules'     => true,
+            ]);
 
-        Storage::disk('public')->put($path, $qrCode);
+            // Generar QR
+            $qrcode = new QRCode($options);
+            $output = $qrcode->render($data);
 
-        return $path;
+            // Guardar
+            file_put_contents($fullPath, $output);
+
+            // Verificar que se guardó correctamente
+            if (!file_exists($fullPath) || filesize($fullPath) === 0) {
+                throw new \Exception('El archivo QR no se guardó correctamente');
+            }
+
+            return $path;
+        } catch (\Exception $e) {
+            \Log::error('Error generando QR Code', [
+                'data' => $data,
+                'filename' => $filename,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
-    /**
-     * Verifica órdenes con retraso y habilita chat.
-     */
     public static function checkAndEnableDelayedChats(): void
     {
         $delayedOrders = self::ready()
@@ -358,11 +285,6 @@ class Order extends Model
 
         foreach ($delayedOrders as $order) {
             $order->update(['chat_enabled' => true]);
-
-            // Notificar al usuario que puede abrir chat
-            if ($order->user) {
-                $order->user->notify(new \App\Notifications\ChatEnabledNotification($order));
-            }
         }
     }
 }

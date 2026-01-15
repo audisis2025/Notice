@@ -3,9 +3,10 @@
 /**
  * Nombre de la clase           : ReportController
  * Descripción de la clase      : Controlador que gestiona reportes sin Services
- * Versión                      : 2.0
- * Fecha de mantenimiento       : 14/01/2026
- * Tipo de mantenimiento        : Perfectivo
+ * Versión                      : 2.1
+ * Fecha de mantenimiento       : 15/01/2026
+ * Tipo de mantenimiento        : Correctivo
+ * Descripción del mantenimiento: Eliminado middleware del constructor (Laravel 11+)
  */
 
 namespace App\Http\Controllers;
@@ -25,11 +26,6 @@ use Carbon\Carbon;
  */
 class ReportController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     /**
      * Muestra el formulario de generación de reportes.
      */
@@ -37,7 +33,23 @@ class ReportController extends Controller
     {
         $business = Auth::user()->business;
 
-        return view('reports.index', compact('business'));
+        if (!$business) {
+            return redirect()->route('business.create')
+                ->with('error', 'Primero debes registrar tu negocio.');
+        }
+
+        // Estadísticas rápidas para la vista
+        $totalOrders = Order::where('business_id', $business->id)->count();
+        $currentMonthOrders = Order::where('business_id', $business->id)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+        
+        $totalRevenue = Order::where('business_id', $business->id)
+            ->whereNotNull('amount')
+            ->sum('amount');
+
+        return view('reports.index', compact('business', 'totalOrders', 'currentMonthOrders', 'totalRevenue'));
     }
 
     /**
@@ -52,6 +64,11 @@ class ReportController extends Controller
 
         try {
             $business = Auth::user()->business;
+
+            if (!$business) {
+                return redirect()->route('business.create')
+                    ->with('error', 'Primero debes registrar tu negocio.');
+            }
             
             // Generar reporte directamente en el controlador
             $report = $this->generateOrdersReport(
@@ -79,6 +96,11 @@ class ReportController extends Controller
 
         try {
             $business = Auth::user()->business;
+
+            if (!$business) {
+                return redirect()->route('business.create')
+                    ->with('error', 'Primero debes registrar tu negocio.');
+            }
             
             $report = $this->generateOrdersReport(
                 $business,
@@ -145,6 +167,9 @@ class ReportController extends Controller
     {
         $csv = fopen('php://temp', 'w');
 
+        // UTF-8 BOM para Excel
+        fprintf($csv, chr(0xEF).chr(0xBB).chr(0xBF));
+
         // Encabezados
         fputcsv($csv, ['Número de Orden', 'Fecha', 'Monto', 'Estado']);
 
@@ -153,14 +178,20 @@ class ReportController extends Controller
             fputcsv($csv, [
                 $order->order_number,
                 $order->created_at->format('Y-m-d H:i:s'),
-                $order->amount,
-                $order->status,
+                $order->amount ?? 0,
+                ucfirst($order->status),
             ]);
         }
 
         rewind($csv);
         $content = stream_get_contents($csv);
         fclose($csv);
+
+        // Crear directorio si no existe
+        $directory = storage_path('app/public/reports');
+        if (!file_exists($directory)) {
+            mkdir($directory, 0755, true);
+        }
 
         $path = "reports/{$filename}";
         Storage::disk('public')->put($path, $content);

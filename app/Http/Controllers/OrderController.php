@@ -116,7 +116,7 @@ class OrderController extends Controller
 
             Log::info('=== FIN CREACIÓN DE ORDEN (ÉXITO) ===');
 
-            return redirect()->route('orders.index')
+            return redirect()->route('orders.show-qr', $order)
                 ->with('success', '¡Orden creada exitosamente!');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -274,5 +274,153 @@ class OrderController extends Controller
 
             return back()->with('error', 'Error al programar recordatorios: ' . $e->getMessage());
         }
+    }
+
+    public function changeStatus(Request $request, Order $order)
+    {
+        // Verificar que la orden pertenezca al negocio del usuario autenticado
+        $business = Auth::user()->business;
+
+        if (!$business || $order->business_id !== $business->id) {
+            abort(403, 'No tienes permiso para modificar esta orden.');
+        }
+
+        // Validar el nuevo estado
+        $request->validate([
+            'status' => 'required|in:pending,paid,ready,delivered,cancelled',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Usar el método del modelo
+            $order->changeStatus($request->status);
+
+            DB::commit();
+
+            return back()->with('success', 'Estado de la orden actualizado correctamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            \Log::error('Error al cambiar estado de orden', [
+                'order_id' => $order->id,
+                'new_status' => $request->status,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->with('error', 'Error al cambiar el estado: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Asocia una orden a un usuario mediante token del QR
+     */
+    public function associate(Request $request, $token)
+    {
+        try {
+            // Buscar orden por token
+            $order = Order::where('association_token', $token)->firstOrFail();
+
+            // Verificar que no esté ya asociada
+            if ($order->associated_at) {
+                return view('orders.already-associated', [
+                    'order' => $order,
+                    'message' => 'Esta orden ya fue asociada previamente.'
+                ]);
+            }
+
+            // ✅ CAPTURAR INFORMACIÓN DEL DISPOSITIVO
+            $deviceInfo = [
+                'user_agent' => $request->userAgent(),
+                'ip' => $request->ip(),
+                'device' => $this->getDeviceType($request),
+            ];
+
+            // ✅ ASOCIAR ORDEN INMEDIATAMENTE (sin login)
+            $order->update([
+                'associated_at' => now(),
+                // Guardar info del dispositivo temporalmente en description si lo necesitas
+                'description' => ($order->description ?? '') . "\n[Escaneado desde: {$deviceInfo['device']} - IP: {$deviceInfo['ip']}]"
+            ]);
+
+            \Log::info('Orden asociada mediante QR', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'device_info' => $deviceInfo,
+                'associated_at' => $order->associated_at
+            ]);
+
+            // ✅ MOSTRAR PÁGINA DE CONFIRMACIÓN
+            return view('orders.qr-scanned', [
+                'order' => $order,
+                'business' => $order->business
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            \Log::warning('Token de orden inválido', ['token' => $token]);
+
+            return view('orders.invalid-qr', [
+                'message' => 'El código QR no es válido o ya expiró.'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error al asociar orden', [
+                'token' => $token,
+                'error' => $e->getMessage()
+            ]);
+
+            return view('orders.error-qr', [
+                'message' => 'Hubo un error al procesar el código QR. Intenta de nuevo.'
+            ]);
+        }
+    }
+
+    /**
+     * Helper para detectar tipo de dispositivo
+     */
+    private function getDeviceType(Request $request): string
+    {
+        $userAgent = strtolower($request->userAgent());
+
+        if (str_contains($userAgent, 'iphone') || str_contains($userAgent, 'ipad')) {
+            return 'iOS';
+        }
+
+        if (str_contains($userAgent, 'android')) {
+            return 'Android';
+        }
+
+        if (str_contains($userAgent, 'mobile')) {
+            return 'Mobile';
+        }
+
+        return 'Desktop';
+    }
+
+    /**
+     * Muestra el QR para escanear
+     */
+    public function showQR(Order $order)
+    {
+        if ($order->business_id !== Auth::user()->business->id) {
+            abort(403, 'No tienes permiso para ver esta orden.');
+        }
+
+        return view('orders.show-qr', compact('order'));
+    }
+
+    /**
+     * Verifica si el QR fue escaneado (AJAX)
+     */
+    public function checkScanned(Order $order)
+    {
+        if ($order->business_id !== Auth::user()->business->id) {
+            abort(403);
+        }
+
+        return response()->json([
+            'scanned' => !is_null($order->user_id),
+            'user_name' => $order->user ? $order->user->name : null,
+            'associated_at' => $order->associated_at ? $order->associated_at->format('H:i:s') : null,
+        ]);
     }
 }

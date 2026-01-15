@@ -12,7 +12,7 @@
  * Descripción del mantenimiento: Corrección de submit y alertas
  */
 -->>
-
+--}}
 <x-layouts.app.sidebar>
     <div class="p-6">
         <div class="mb-6">
