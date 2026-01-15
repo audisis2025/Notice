@@ -13,6 +13,135 @@ use App\Http\Controllers\RatingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ChatController;
 
+// ===================================================================
+// RUTAS DE AUTENTICACIÓN (Blade tradicional, NO Livewire)
+// ===================================================================
+
+Route::middleware('guest')->group(function () {
+    // Login
+    Route::get('login', function () {
+        return view('livewire.auth.login');
+    })->name('login');
+    
+    Route::post('login', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended('/dashboard');
+        }
+
+        return back()->withErrors([
+            'email' => 'These credentials do not match our records.',
+        ])->onlyInput('email');
+    })->name('login.store');
+
+    // Register
+    Route::get('register', function () {
+        return view('livewire.auth.register');
+    })->name('register');
+    
+    Route::post('register', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'phone' => 'nullable|string|max:20',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = \App\Models\User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            'role' => 'BusinessAdministrator',
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        Auth::login($user);
+
+        return redirect('/dashboard')->with('success', '¡Cuenta creada exitosamente!');
+    })->name('register.store');
+
+    // Forgot Password
+    Route::get('forgot-password', function () {
+        return view('livewire.auth.forgot-password');
+    })->name('password.request');
+    
+    Route::post('forgot-password', function (\Illuminate\Http\Request $request) {
+        $request->validate(['email' => 'required|email']);
+
+        $status = \Illuminate\Support\Facades\Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === \Illuminate\Support\Facades\Password::RESET_LINK_SENT
+            ? back()->with(['status' => __($status)])
+            : back()->withErrors(['email' => __($status)]);
+    })->name('password.email');
+
+    // Reset Password
+    Route::get('reset-password/{token}', function ($token) {
+        return view('livewire.auth.reset-password', ['token' => $token]);
+    })->name('password.reset');
+    
+    Route::post('reset-password', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $status = \Illuminate\Support\Facades\Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => \Illuminate\Support\Facades\Hash::make($password)
+                ])->setRememberToken(\Illuminate\Support\Str::random(60));
+
+                $user->save();
+            }
+        );
+
+        return $status === \Illuminate\Support\Facades\Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('status', __($status))
+            : back()->withErrors(['email' => [__($status)]]);
+    })->name('password.update');
+
+    // Two Factor Challenge
+    Route::get('two-factor-challenge', function () {
+        return view('livewire.auth.two-factor-challenge');
+    })->name('two-factor.login');
+});
+
+Route::middleware('auth')->group(function () {
+    // Logout
+    Route::post('logout', function (\Illuminate\Http\Request $request) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/');
+    })->name('logout');
+
+    // Verify Email
+    Route::get('verify-email', function () {
+        return view('livewire.auth.verify-email');
+    })->name('verification.notice');
+
+    // Confirm Password
+    Route::get('confirm-password', function () {
+        return view('livewire.auth.confirm-password');
+    })->name('password.confirm');
+});
+
+// ===================================================================
+// RUTAS PÚBLICAS
+// ===================================================================
+
 // Ruta raíz
 Route::get('/', function () {
     $packages = \App\Models\Package::where('is_active', true)
@@ -21,22 +150,28 @@ Route::get('/', function () {
     return view('welcome', compact('packages'));
 })->name('home');
 
-// En routes/web.php después de la ruta dashboard
-Route::get('/select-package', function () {
-    $packages = \App\Models\Package::where('is_active', true)
-        ->orderBy('price')
-        ->get();
-    $business = auth()->user()->business;
-    $currentPackage = $business?->activePackage;
+// ✅ RUTA PÚBLICA - Asociar orden mediante QR (fuera de middleware auth)
+Route::get('orders/associate/{token}', [OrderController::class, 'associate'])
+    ->name('orders.associate');
 
-    return view('dashboard.select-package', compact('packages', 'currentPackage'));
-})->middleware('auth')->name('select.package');
-
-// Rutas protegidas por autenticación
+// ===================================================================
+// RUTAS PROTEGIDAS POR AUTENTICACIÓN
+// ===================================================================
 Route::middleware(['auth'])->group(function () {
 
     // Dashboard con redirección según rol
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Selección de paquete
+    Route::get('/select-package', function () {
+        $packages = \App\Models\Package::where('is_active', true)
+            ->orderBy('price')
+            ->get();
+        $business = auth()->user()->business;
+        $currentPackage = $business?->activePackage;
+
+        return view('dashboard.select-package', compact('packages', 'currentPackage'));
+    })->name('select.package');
 
     // ===================================================================
     // RUTAS PARA SUPER ADMINISTRADOR
@@ -131,7 +266,3 @@ Route::middleware(['auth'])->group(function () {
         Route::get('chat/{order}', [ChatController::class, 'show'])->name('chat.show');
     });
 });
-
-// ✅ RUTA PÚBLICA - Asociar orden mediante QR (fuera de middleware auth)
-Route::get('orders/associate/{token}', [OrderController::class, 'associate'])
-    ->name('orders.associate');
